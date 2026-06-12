@@ -1,6 +1,9 @@
+<script setup>
+</script>
+
 <template>
   <div>
-    <NuxtRouteAnnouncer />
-    <NuxtWelcome />
+    <h2>hoge</h2>
+    <Button>button</Button>
   </div>
 </template>
