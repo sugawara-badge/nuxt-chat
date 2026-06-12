@@ -5,6 +5,14 @@ Nuxt: 3
 
 npm i
 
+npx shadcn-vue@latest add button
+
+
+
+【やったこと】
+・shadcn導入
+
+
 【トラブル】
 
 ・「npm run dev」でerr
