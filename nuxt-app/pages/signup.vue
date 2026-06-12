@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm, Field as VeeField } from 'vee-validate'
-// import { toast } from 'vue-sonner'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,31 +13,30 @@ import {
 } from '@/components/ui/card'
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
-  FieldLabel,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+// import firebase_app from "@/plugins/firebase.client";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  signOut,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+  type User,
+} from 'firebase/auth';
 
 definePageMeta({
   layout: false
 });
 
-
-// TODO: 状態管理実装？
-const message = ref('');
-
-onMounted(() => {
-  if (localStorage.message) {
-      message.value = localStorage.message;
-      localStorage.message = "";
-    }
-})
-
+const errorMessage = ref('');
 const formSchema = toTypedSchema(
   z.object({
-    email: z
+    user_name: z
       .string()
       .min(1, 'Username must be at least 1 characters.')
       .max(50, 'Username must be at most 50 characters.')
@@ -46,31 +44,48 @@ const formSchema = toTypedSchema(
         /^\w+$/,
         'Username can only contain letters, numbers, and underscores.',
       ),
+    email: z
+      .string()
+      .min(1, 'email must be at least 1 characters.')
+      .max(50, 'email must be at most 50 characters.'),
     password: z
       .string()
-      .min(1, 'Username must be at least 1 characters.')
-      .max(50, 'Username must be at most 50 characters.')
+      .min(1, 'password must be at least 1 characters.')
+      .max(50, 'password must be at most 50 characters.')
   }),
 )
 
 const { handleSubmit, resetForm } = useForm({
   validationSchema: formSchema,
   initialValues: {
+    user_name: '',
     email: '',
     password: ''
   },
 })
-
-const onSubmit = handleSubmit((data) => {
-  console.log('onsubmit-----')
+const { $auth } = useNuxtApp();
+const onSubmit = handleSubmit(async (data) => {
+  const result = await createUserWithEmailAndPassword(
+    $auth,
+    data.email,
+    data.password,
+  ).then(async(res) => {
+    await updateProfile(res.user, { displayName: data.user_name })
+    localStorage.message = "新規登録に成功しました";
+    navigateTo('/login');
+  }).catch((err) => {
+    // TODO: 実装
+    errorMessage.value = "ユーザーの新規作成に失敗しました";
+    console.error(err)
+  })
 })
 </script>
 
 <template>
-  <h2 class="text-center pt-16" v-if="message">{{ message }}</h2>
+  <h2 class="text-center pt-16 text-red-600" v-if="errorMessage">{{ errorMessage }}</h2>
   <Card class="w-full sm:max-w-md mt-4 m-auto mt-16">
     <CardHeader class="text-center">
-      <CardTitle class="text-xl pt-2 pb-2">Login</CardTitle>
+      <CardTitle class="text-xl pt-2 pb-2">SignUp</CardTitle>
       <CardDescription>
         ユーザー情報をご入力ください
       </CardDescription>
@@ -78,12 +93,20 @@ const onSubmit = handleSubmit((data) => {
     <CardContent>
       <form id="form-vee-input" @submit="onSubmit">
         <FieldGroup>
-
-
+          <VeeField v-slot="{ field, errors }" name="user_name">
+            <Field :data-invalid="!!errors.length">
+              <Input
+                id="form-vee-input-user-name"
+                v-bind="field"
+                :aria-invalid="!!errors.length"
+                placeholder="Name"
+                autocomplete="user_name"
+              />
+              <FieldError v-if="errors.length" :errors="errors" />
+            </Field>
+          </VeeField>
           <VeeField v-slot="{ field, errors }" name="email">
             <Field :data-invalid="!!errors.length">
-              <!-- <FieldLabel for="form-vee-input-username">
-              </FieldLabel> -->
               <Input
                 id="form-vee-input-email"
                 v-bind="field"
@@ -94,12 +117,12 @@ const onSubmit = handleSubmit((data) => {
               <FieldError v-if="errors.length" :errors="errors" />
             </Field>
           </VeeField>
+
           <VeeField v-slot="{ field, errors }" name="password">
             <Field :data-invalid="!!errors.length">
-              <!-- <FieldLabel for="form-vee-input-username">
-              </FieldLabel> -->
               <Input
                 id="form-vee-input-password"
+                type="password"
                 v-bind="field"
                 :aria-invalid="!!errors.length"
                 placeholder="Password"
@@ -108,6 +131,8 @@ const onSubmit = handleSubmit((data) => {
               <FieldError v-if="errors.length" :errors="errors" />
             </Field>
           </VeeField>
+
+
         </FieldGroup>
       </form>
     </CardContent>
@@ -117,12 +142,12 @@ const onSubmit = handleSubmit((data) => {
           Reset
         </Button>
         <Button type="submit" form="form-vee-input">
-          Login
+          SignUp
         </Button>
       </Field>
     </CardFooter>
   </Card>
   <div class="text-center text-sm mt-4">
-    <NuxtLink to="/signup" class="text-blue-400">会員登録はこちら</NuxtLink>
+    <NuxtLink to="/login" class="text-blue-400">ログインはこちら</NuxtLink>
   </div>
 </template>
