@@ -7,7 +7,6 @@ npm i
 
 【トラブル】
 
-・shadcnのsidebarがインストールできない
-
-x
-px shadcn@2.7.4 add sidebar
+・「npm run dev」でerr
+    原因: typescriptが入っていないため
+    対応: npm install -D typescript
