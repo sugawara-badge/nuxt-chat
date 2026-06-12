@@ -118,4 +118,7 @@ const onSubmit = handleSubmit((data) => {
       </Field>
     </CardFooter>
   </Card>
+  <div class="text-center text-sm mt-4">
+    <NuxtLink to="/signup" class="text-blue-400">会員登録はこちら</NuxtLink>
+  </div>
 </template>

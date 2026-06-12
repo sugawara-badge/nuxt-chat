@@ -17,6 +17,7 @@
     "@vueuse/core": "^14.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "firebase": "^12.14.0",
     "nuxt": "^3.21.8",
     "reka-ui": "^2.9.10",
     "shadcn-nuxt": "^2.7.4",

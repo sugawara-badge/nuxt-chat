@@ -17,6 +17,17 @@ import {
   FieldGroup,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+// import firebase_app from "@/plugins/firebase.client";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  signOut,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+  type User,
+} from 'firebase/auth';
 
 definePageMeta({
   layout: false
@@ -35,11 +46,7 @@ const formSchema = toTypedSchema(
     email: z
       .string()
       .min(1, 'Username must be at least 1 characters.')
-      .max(50, 'Username must be at most 50 characters.')
-      .regex(
-        /^\w+$/,
-        'Username can only contain letters, numbers, and underscores.',
-      ),
+      .max(50, 'Username must be at most 50 characters.'),
     password: z
       .string()
       .min(1, 'Username must be at least 1 characters.')
@@ -55,9 +62,16 @@ const { handleSubmit, resetForm } = useForm({
     password: ''
   },
 })
-
-const onSubmit = handleSubmit((data) => {
-  console.log('onsubmit-----')
+const { $auth } = useNuxtApp();
+const onSubmit = handleSubmit(async (data) => {
+  const result = await createUserWithEmailAndPassword(
+    $auth,
+    data.email,
+    data.password,
+  )
+  await updateProfile(result.user, { displayName: data.user_name })
+  console.log('r--------')
+  console.log(result.user)
 })
 </script>
 
@@ -122,4 +136,7 @@ const onSubmit = handleSubmit((data) => {
       </Field>
     </CardFooter>
   </Card>
+  <div class="text-center text-sm mt-4">
+    <NuxtLink to="/login" class="text-blue-400">ログインはこちら</NuxtLink>
+  </div>
 </template>
