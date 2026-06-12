@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm, Field as VeeField } from 'vee-validate'
-// import { toast } from 'vue-sonner'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,10 +13,8 @@ import {
 } from '@/components/ui/card'
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
-  FieldLabel,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
@@ -27,6 +24,14 @@ definePageMeta({
 
 const formSchema = toTypedSchema(
   z.object({
+    user_name: z
+      .string()
+      .min(1, 'Username must be at least 1 characters.')
+      .max(50, 'Username must be at most 50 characters.')
+      .regex(
+        /^\w+$/,
+        'Username can only contain letters, numbers, and underscores.',
+      ),
     email: z
       .string()
       .min(1, 'Username must be at least 1 characters.')
@@ -45,20 +50,13 @@ const formSchema = toTypedSchema(
 const { handleSubmit, resetForm } = useForm({
   validationSchema: formSchema,
   initialValues: {
+    user_name: '',
     email: '',
     password: ''
   },
 })
 
 const onSubmit = handleSubmit((data) => {
-  // toast('You submitted the following values:', {
-  //   description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(data, null, 2))),
-  //   position: 'bottom-right',
-  //   class: 'flex flex-col gap-2',
-  //   style: {
-  //     '--border-radius': 'calc(var(--radius)  + 4px)',
-  //   },
-  // })
   console.log('onsubmit-----')
 })
 </script>
@@ -66,7 +64,7 @@ const onSubmit = handleSubmit((data) => {
 <template>
   <Card class="w-full sm:max-w-md mt-4 m-auto mt-16">
     <CardHeader class="text-center">
-      <CardTitle class="text-xl pt-2 pb-2">Login</CardTitle>
+      <CardTitle class="text-xl pt-2 pb-2">SignUp</CardTitle>
       <CardDescription>
         ユーザー情報をご入力ください
       </CardDescription>
@@ -74,12 +72,20 @@ const onSubmit = handleSubmit((data) => {
     <CardContent>
       <form id="form-vee-input" @submit="onSubmit">
         <FieldGroup>
-
-
+          <VeeField v-slot="{ field, errors }" name="user_name">
+            <Field :data-invalid="!!errors.length">
+              <Input
+                id="form-vee-input-user-name"
+                v-bind="field"
+                :aria-invalid="!!errors.length"
+                placeholder="Name"
+                autocomplete="user_name"
+              />
+              <FieldError v-if="errors.length" :errors="errors" />
+            </Field>
+          </VeeField>
           <VeeField v-slot="{ field, errors }" name="email">
             <Field :data-invalid="!!errors.length">
-              <!-- <FieldLabel for="form-vee-input-username">
-              </FieldLabel> -->
               <Input
                 id="form-vee-input-email"
                 v-bind="field"
@@ -92,8 +98,6 @@ const onSubmit = handleSubmit((data) => {
           </VeeField>
           <VeeField v-slot="{ field, errors }" name="password">
             <Field :data-invalid="!!errors.length">
-              <!-- <FieldLabel for="form-vee-input-username">
-              </FieldLabel> -->
               <Input
                 id="form-vee-input-password"
                 v-bind="field"
@@ -113,7 +117,7 @@ const onSubmit = handleSubmit((data) => {
           Reset
         </Button>
         <Button type="submit" form="form-vee-input">
-          Login
+          SignUp
         </Button>
       </Field>
     </CardFooter>
