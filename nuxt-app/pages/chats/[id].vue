@@ -11,6 +11,10 @@ import {
   FieldSet,
   FieldTitle,
 } from '@/components/ui/field'
+
+const onSubmit = () => {
+  console.log('onsubmit-----')
+}
 </script>
 
 <template>
@@ -35,19 +39,19 @@ import {
           <VeeField v-slot="{ field, errors }" name="title">
             <Field :data-invalid="!!errors.length">
               <FieldLabel for="form-vee-demo-title">
-                Bug Title
+                メッセージを送信する
               </FieldLabel>
               <Input
                 id="form-vee-demo-title"
                 v-bind="field"
-                placeholder="Login button not working on mobile"
+                placeholder="Input Message"
                 autocomplete="off"
                 :aria-invalid="!!errors.length"
               />
               <FieldError v-if="errors.length" :errors="errors" />
             </Field>
           </VeeField>
-          <VeeField v-slot="{ field, errors }" name="description">
+          <!-- <VeeField v-slot="{ field, errors }" name="description">
             <Field :data-invalid="!!errors.length">
               <FieldLabel for="form-vee-demo-description">
                 Description
@@ -73,7 +77,7 @@ import {
               </FieldDescription>
               <FieldError v-if="errors.length" :errors="errors" />
             </Field>
-          </VeeField>
+          </VeeField> -->
         </FieldGroup>
       </form>
     </CardContent>
