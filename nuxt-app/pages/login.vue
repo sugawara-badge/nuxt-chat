@@ -25,6 +25,17 @@ definePageMeta({
   layout: false
 });
 
+
+// TODO: 状態管理実装？
+const message = ref('');
+
+onMounted(() => {
+  if (localStorage.message) {
+      message.value = localStorage.message;
+      localStorage.message = "";
+    }
+})
+
 const formSchema = toTypedSchema(
   z.object({
     email: z
@@ -51,19 +62,12 @@ const { handleSubmit, resetForm } = useForm({
 })
 
 const onSubmit = handleSubmit((data) => {
-  // toast('You submitted the following values:', {
-  //   description: h('pre', { class: 'bg-code text-code-foreground mt-2 w-[320px] overflow-x-auto rounded-md p-4' }, h('code', JSON.stringify(data, null, 2))),
-  //   position: 'bottom-right',
-  //   class: 'flex flex-col gap-2',
-  //   style: {
-  //     '--border-radius': 'calc(var(--radius)  + 4px)',
-  //   },
-  // })
   console.log('onsubmit-----')
 })
 </script>
 
 <template>
+  <h2 class="text-center pt-16" v-if="message">{{ message }}</h2>
   <Card class="w-full sm:max-w-md mt-4 m-auto mt-16">
     <CardHeader class="text-center">
       <CardTitle class="text-xl pt-2 pb-2">Login</CardTitle>
