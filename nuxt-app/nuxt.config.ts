@@ -3,16 +3,13 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  // modules: ['@nuxtjs/tailwindcss', 'shadcn-nuxt'],
-  modules: [ 'shadcn-nuxt'],
-  
+  modules: [ 'shadcn-nuxt', '@vee-validate/nuxt'],
   css: ['~/assets/css/tailwind.css'],
   vite: {
     plugins: [
       tailwindcss(),
     ],
   },
-
   shadcn: {
     /**
      * Prefix for all the imported component.
@@ -26,7 +23,13 @@ export default defineNuxtConfig({
      * @default "@/components/ui"
      */
     componentDir: '@/components/ui'
-  }
-
-
+  },
+  veeValidate: {
+    autoImports: true,
+    componentNames: {
+      Form: 'VeeForm',
+      Field: 'VeeField',
+      ErrorMessage: 'VeeErrorMessage',
+    },
+  },
 })
