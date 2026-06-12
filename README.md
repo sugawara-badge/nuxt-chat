@@ -10,8 +10,12 @@ npx shadcn-vue@latest add button
 
 
 【やったこと】
-・shadcn導入
+・Shadcn導入
+・Tailwind CSS
+https://qiita.com/Hirohana/items/2a33c96cbdf494958a2e
 
+【Tailwind ルール】
+h2: text-xl pt-2 pb-2
 
 【トラブル】
 
