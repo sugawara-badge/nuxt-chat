@@ -16,6 +16,17 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { GalleryVerticalEnd } from '@lucide/vue'
+import {
+  getAuth,
+  signOut,
+  type User,
+} from 'firebase/auth';
+
+const logOut = (): void=> {
+  signOut(getAuth()).then(() => {
+    navigateTo('/login');
+  })
+}
 </script>
 
 <template>
@@ -45,6 +56,11 @@ import { GalleryVerticalEnd } from '@lucide/vue'
                 <SidebarMenuItem>
                   <SidebarMenuButton as-child>
                     <NuxtLink to="/">Home</NuxtLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton as-child>
+                    <NuxtLink @click="logOut">Logout</NuxtLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>

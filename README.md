@@ -38,3 +38,7 @@ h2: text-xl pt-2 pb-2
 ----------------------------------------------
 ・Failed to resolve component: GalleryVerticalEnd 
 対応: default.vueで「'@lucide/vue'」をimpoert
+
+----------------------------------------------
+・middlewareを書いた時、以下のエラー
+Firebase: No Firebase App '[DEFAULT]' has been created - call initializeApp() first (app/no-app).
