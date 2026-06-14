@@ -17,23 +17,13 @@ import {
   FieldGroup,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-// import firebase_app from "@/plugins/firebase.client";
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  signOut,
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup,
-  type User,
-} from 'firebase/auth';
 
 definePageMeta({
   layout: false
 });
 
-const errorMessage = ref('');
+const authStore = useAuthStore()
+const errorMessage = ref('')
 const formSchema = toTypedSchema(
   z.object({
     user_name: z
@@ -63,21 +53,20 @@ const { handleSubmit, resetForm } = useForm({
     password: ''
   },
 })
-const { $auth } = useNuxtApp();
 const onSubmit = handleSubmit(async (data) => {
-  const result = await createUserWithEmailAndPassword(
-    $auth,
+  errorMessage.value = ''
+  const { user, error } = await authStore.signup(
     data.email,
     data.password,
-  ).then(async(res) => {
-    await updateProfile(res.user, { displayName: data.user_name })
-    localStorage.message = "新規登録に成功しました";
-    navigateTo('/login');
-  }).catch((err) => {
-    // TODO: 実装
-    errorMessage.value = "ユーザーの新規作成に失敗しました";
-    console.error(err)
-  })
+    data.user_name,
+  )
+  if (error || !user) {
+    errorMessage.value = 'ユーザーの新規作成に失敗しました'
+    console.error(error)
+    return
+  }
+  localStorage.message = '新規登録に成功しました'
+  navigateTo('/login')
 })
 </script>
 
