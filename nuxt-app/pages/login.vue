@@ -20,11 +20,15 @@ import {
   FieldLabel,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  type User,
+} from 'firebase/auth';
 
 definePageMeta({
   layout: false
 });
-
 
 // TODO: 状態管理実装？
 const message = ref('');
@@ -40,16 +44,16 @@ const formSchema = toTypedSchema(
   z.object({
     email: z
       .string()
-      .min(1, 'Username must be at least 1 characters.')
-      .max(50, 'Username must be at most 50 characters.')
-      .regex(
-        /^\w+$/,
-        'Username can only contain letters, numbers, and underscores.',
-      ),
+      .min(1, 'email must be at least 1 characters.')
+      .max(50, 'email must be at most 50 characters.'),
+      // .regex(
+      //   /^\w+$/,
+      //   'Username can only contain letters, numbers, and underscores.',
+      // ),
     password: z
       .string()
-      .min(1, 'Username must be at least 1 characters.')
-      .max(50, 'Username must be at most 50 characters.')
+      .min(1, 'password must be at least 1 characters.')
+      .max(50, 'password must be at most 50 characters.')
   }),
 )
 
@@ -61,8 +65,15 @@ const { handleSubmit, resetForm } = useForm({
   },
 })
 
-const onSubmit = handleSubmit((data) => {
-  console.log('onsubmit-----')
+// TODO: piniaで実装
+const onSubmit = handleSubmit(async(data): Promise<void> => {
+  await signInWithEmailAndPassword(getAuth(), data.email, data.password)
+    .then(() => {
+      navigateTo('/');
+    }).catch((err) => {
+      message.value = 'ログインに失敗しました';
+      console.error(err);
+    })
 })
 </script>
 
@@ -78,8 +89,6 @@ const onSubmit = handleSubmit((data) => {
     <CardContent>
       <form id="form-vee-input" @submit="onSubmit">
         <FieldGroup>
-
-
           <VeeField v-slot="{ field, errors }" name="email">
             <Field :data-invalid="!!errors.length">
               <!-- <FieldLabel for="form-vee-input-username">
@@ -100,6 +109,7 @@ const onSubmit = handleSubmit((data) => {
               </FieldLabel> -->
               <Input
                 id="form-vee-input-password"
+                type="password"
                 v-bind="field"
                 :aria-invalid="!!errors.length"
                 placeholder="Password"
