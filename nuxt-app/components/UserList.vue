@@ -21,9 +21,9 @@ const counter = useCounterStore();
     </ul>
     <!-- TODO: 不要になったら消す -->
     <!-- Pinia Test -->
-    <v-container>
+    <div>
       <NuxtLink to="/count">count ページへ飛ぶ </NuxtLink>
       <p>ボタンを{{ counter.count }}回おしました!</p>
-    </v-container>
+    </div>
   </div>
 </template>

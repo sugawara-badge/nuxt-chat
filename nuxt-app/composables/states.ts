@@ -10,4 +10,7 @@ export const useCounterStore = defineStore(
     }
     return { count, increment };
   },
+  {
+    persist: true
+  }
 );
