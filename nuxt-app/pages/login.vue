@@ -14,10 +14,8 @@ import {
 } from '@/components/ui/card'
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
-  FieldLabel,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
@@ -26,30 +24,27 @@ definePageMeta({
 });
 
 
-// TODO: 状態管理実装？
-const message = ref('');
+const authStore = useAuthStore()
+const message = ref('')
+const errorMessage = ref('')
 
 onMounted(() => {
   if (localStorage.message) {
-      message.value = localStorage.message;
-      localStorage.message = "";
-    }
+    message.value = localStorage.message
+    localStorage.message = ''
+  }
 })
 
 const formSchema = toTypedSchema(
   z.object({
     email: z
       .string()
-      .min(1, 'Username must be at least 1 characters.')
-      .max(50, 'Username must be at most 50 characters.')
-      .regex(
-        /^\w+$/,
-        'Username can only contain letters, numbers, and underscores.',
-      ),
+      .min(1, 'Email must be at least 1 characters.')
+      .max(50, 'Email must be at most 50 characters.'),
     password: z
       .string()
-      .min(1, 'Username must be at least 1 characters.')
-      .max(50, 'Username must be at most 50 characters.')
+      .min(1, 'Password must be at least 1 characters.')
+      .max(50, 'Password must be at most 50 characters.')
   }),
 )
 
@@ -61,13 +56,21 @@ const { handleSubmit, resetForm } = useForm({
   },
 })
 
-const onSubmit = handleSubmit((data) => {
-  console.log('onsubmit-----')
+const onSubmit = handleSubmit(async (data) => {
+  errorMessage.value = ''
+  const { user, error } = await authStore.login(data.email, data.password)
+  if (error || !user) {
+    errorMessage.value = 'ログインに失敗しました'
+    console.error(error)
+    return
+  }
+  navigateTo('/');
 })
 </script>
 
 <template>
   <h2 class="text-center pt-16" v-if="message">{{ message }}</h2>
+  <h2 class="text-center pt-16 text-red-600" v-if="errorMessage">{{ errorMessage }}</h2>
   <Card class="w-full sm:max-w-md mt-4 m-auto mt-16">
     <CardHeader class="text-center">
       <CardTitle class="text-xl pt-2 pb-2">Login</CardTitle>
@@ -100,6 +103,7 @@ const onSubmit = handleSubmit((data) => {
               </FieldLabel> -->
               <Input
                 id="form-vee-input-password"
+                type="password"
                 v-bind="field"
                 :aria-invalid="!!errors.length"
                 placeholder="Password"
