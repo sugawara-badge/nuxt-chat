@@ -15,6 +15,7 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
+import { GalleryVerticalEnd } from '@lucide/vue'
 </script>
 
 <template>
