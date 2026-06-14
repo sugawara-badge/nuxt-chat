@@ -1,20 +1,21 @@
 const publicPaths = ['/login', '/signup']
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (publicPaths.includes(to.path)) {
+  if (!publicPaths.includes(to.path)) {
     return
   }
 
   if (import.meta.server) {
-    return navigateTo('/login', { replace: true })
+    return
   }
 
   const authStore = useAuthStore()
   const currentUser = await authStore.waitForAuth()
 
-  if (!currentUser) {
+  if (currentUser) {
     const redirect = useCookie('redirect')
-    redirect.value = to.fullPath
-    return navigateTo('/login', { replace: true })
+    const redirectPath = redirect.value || '/'
+    redirect.value = null
+    return navigateTo(redirectPath, { replace: true })
   }
 })

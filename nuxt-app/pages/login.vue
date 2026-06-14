@@ -20,8 +20,9 @@ import {
 import { Input } from '@/components/ui/input'
 
 definePageMeta({
-  layout: false
-});
+  layout: false,
+  middleware: ['guest'],
+})
 
 
 const authStore = useAuthStore()
@@ -64,7 +65,10 @@ const onSubmit = handleSubmit(async (data) => {
     console.error(error)
     return
   }
-  navigateTo('/');
+  const redirect = useCookie('redirect')
+  const redirectPath = redirect.value || '/'
+  redirect.value = null
+  navigateTo(redirectPath)
 })
 </script>
 

@@ -19,8 +19,9 @@ import {
 import { Input } from '@/components/ui/input'
 
 definePageMeta({
-  layout: false
-});
+  layout: false,
+  middleware: ['guest'],
+})
 
 const authStore = useAuthStore()
 const errorMessage = ref('')
