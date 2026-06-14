@@ -64,6 +64,8 @@ const { handleSubmit, resetForm } = useForm({
   },
 })
 const { $auth } = useNuxtApp();
+
+// TODO: piniaで実装
 const onSubmit = handleSubmit(async (data) => {
   const result = await createUserWithEmailAndPassword(
     $auth,
