@@ -2,40 +2,52 @@ import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut,
   updateProfile,
+  signOut,
   type User,
   type Auth,
 } from 'firebase/auth'
 
 export const useAuthStore = defineStore('auth', () => {
-  const { $auth } = useNuxtApp()
-  const auth = $auth as Auth | null
   const user = ref<User | null>(null)
   const loading = ref(false)
   let unsubscribe: (() => void) | null = null
+  let authReadyPromise: Promise<User | null> | null = null
 
-  // 認証リスナーを開始
-  const startAuthListener = () => {
-    loading.value = true
-    if (!auth || unsubscribe) {
-      loading.value = false
-      return
+  const getAuthInstance = (): Auth | null => {
+    const { $auth } = useNuxtApp()
+    return ($auth as Auth | null) ?? null
+  }
+
+  // 認証状態が確定するまで待機し、現在ログイン中のユーザーを返す
+  const waitForAuth = (): Promise<User | null> => {
+    if (authReadyPromise) {
+      return authReadyPromise
     }
 
-    unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      user.value = currentUser
-      loading.value = false
-
-      // ユーザーが未認証の場合、ログインページにリダイレクト
-      if (!currentUser) {
-        navigateTo('/login')
-      } else {
-        // ユーザーが認証された場合、プロフィールを取得
-        const profileStore = useProfileStore()
-        await profileStore.getProfile(currentUser.uid)
+    authReadyPromise = new Promise((resolve) => {
+      const auth = getAuthInstance()
+      if (!auth) {
+        loading.value = false
+        resolve(null)
+        return
       }
+
+      loading.value = true
+      let isFirstAuthState = true
+
+      unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        user.value = currentUser
+        loading.value = false
+
+        if (isFirstAuthState) {
+          isFirstAuthState = false
+          resolve(currentUser)
+        }
+      })
     })
+
+    return authReadyPromise
   }
 
   const stopAuthListener = () => {
@@ -43,6 +55,7 @@ export const useAuthStore = defineStore('auth', () => {
       unsubscribe()
       unsubscribe = null
     }
+    authReadyPromise = null
   }
 
   // 新規登録
@@ -51,6 +64,7 @@ export const useAuthStore = defineStore('auth', () => {
     password: string,
     displayName: string,
   ) => {
+    const auth = getAuthInstance()
     if (!auth) {
       return {
         user: null,
@@ -72,6 +86,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // ログイン
   const login = async (email: string, password: string) => {
+    const auth = getAuthInstance()
     if (!auth) {
       return {
         user: null,
@@ -82,7 +97,7 @@ export const useAuthStore = defineStore('auth', () => {
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       )
       return { user: userCredential.user, error: null }
     } catch (error) {
@@ -90,7 +105,21 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // ストアが破棄される際にリスナーをクリーンアップ
+  const logOut = async () => {
+    try {
+      const auth = getAuthInstance()
+      if (!auth) {
+        return {
+          user: null,
+          error: new Error('Firebase認証が初期化されていません'),
+        }
+      }
+      await signOut(auth)
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   onScopeDispose(() => {
     stopAuthListener()
   })
@@ -100,7 +129,8 @@ export const useAuthStore = defineStore('auth', () => {
     loading,
     signup,
     login,
-    startAuthListener,
+    logOut,
+    waitForAuth,
     stopAuthListener,
   }
 })
