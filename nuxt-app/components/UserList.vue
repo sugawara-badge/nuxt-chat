@@ -4,6 +4,7 @@ const users = [
   {id: 2, name: '2郎'},
   {id: 3, name: '3郎'},
 ]
+const counter = useCounterStore();
 </script>
 
 <template>
@@ -18,5 +19,11 @@ const users = [
         <hr>
       </li>
     </ul>
+    <!-- TODO: 不要になったら消す -->
+    <!-- Pinia Test -->
+    <div>
+      <NuxtLink to="/count">count ページへ飛ぶ </NuxtLink>
+      <p>ボタンを{{ counter.count }}回おしました!</p>
+    </div>
   </div>
 </template>

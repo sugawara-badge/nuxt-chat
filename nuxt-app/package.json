@@ -12,6 +12,7 @@
   "dependencies": {
     "@lucide/vue": "^1.17.0",
     "@nuxtjs/tailwindcss": "^6.14.0",
+    "@pinia/nuxt": "^0.11.3",
     "@vee-validate/nuxt": "^4.15.1",
     "@vee-validate/zod": "^4.15.1",
     "@vueuse/core": "^14.3.0",
@@ -19,6 +20,8 @@
     "clsx": "^2.1.1",
     "firebase": "^12.14.0",
     "nuxt": "^3.21.8",
+    "pinia": "^3.0.4",
+    "pinia-plugin-persistedstate": "^4.7.1",
     "reka-ui": "^2.9.10",
     "shadcn-nuxt": "^2.7.4",
     "tailwind-merge": "^3.6.0",
