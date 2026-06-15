@@ -12,7 +12,7 @@ import { useAuthStore } from "~/store/auth";
 
 export default defineNuxtRouteMiddleware((to) => {
   const auth = useAuthStore();
-  if (!auth) {
+  if (!auth.displayName) {
     return navigateTo("/login", { replace: true });
   }
   return;

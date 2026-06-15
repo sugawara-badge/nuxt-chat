@@ -8,9 +8,14 @@ export const useAuthStore = defineStore(
       displayName.value = auth.displayName;
     }
 
+    function logout() {
+      displayName.value = "";
+    }
+
     return {
       displayName,
       updateAuth,
+      logout,
     };
   },
   {

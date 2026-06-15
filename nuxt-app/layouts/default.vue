@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { GalleryVerticalEnd } from "@lucide/vue";
 import { getAuth, signOut } from "firebase/auth";
+import { useAuthStore } from "~/store/auth";
 
 interface StoredUser {
   displayName: string | null;
@@ -37,6 +38,8 @@ onMounted(() => {
 const logOut = (): void => {
   signOut(getAuth()).then(() => {
     sessionStorage.removeItem("user");
+    const authStore = useAuthStore();
+    authStore.logout();
     navigateTo("/login");
   });
 };
