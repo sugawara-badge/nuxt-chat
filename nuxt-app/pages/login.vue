@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { getAuth, signInWithEmailAndPassword, type User } from "firebase/auth";
+import { useAuthStore } from "~/store/auth";
 
 definePageMeta({
   layout: false,
@@ -71,6 +72,9 @@ const onSubmit = handleSubmit(async (data): Promise<void> => {
         email: result.user.email,
         refreshToken: result.user.refreshToken,
       };
+      const authStore = useAuthStore();
+      authStore.updateAuth(auth);
+
       sessionStorage.setItem("user", JSON.stringify(auth));
       navigateTo("/");
     })
