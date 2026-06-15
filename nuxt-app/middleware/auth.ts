@@ -1,31 +1,19 @@
-import { onAuthStateChanged, type Auth, type User } from 'firebase/auth'
+// import { onAuthStateChanged, type Auth, type User } from "firebase/auth";
+import { useAuthStore } from "~/store/auth";
 
-const waitForCurrentUser = (auth: Auth): Promise<User | null> => {
-  return new Promise((resolve) => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      unsubscribe()
-      resolve(user)
-    })
-  })
-}
+// const waitForCurrentUser = (auth: Auth): Promise<User | null> => {
+//   return new Promise((resolve) => {
+//     const unsubscribe = onAuthStateChanged(auth, (user) => {
+//       unsubscribe();
+//       resolve(user);
+//     });
+//   });
+// };
 
-export default defineNuxtRouteMiddleware(async (to) => {
-  if (import.meta.server) {
-    return navigateTo('/login', { replace: true })
+export default defineNuxtRouteMiddleware((to) => {
+  const auth = useAuthStore();
+  if (!auth.displayName) {
+    return navigateTo("/login", { replace: true });
   }
-
-  const { $auth } = useNuxtApp()
-  const auth = $auth as Auth | null
-
-  if (!auth) {
-    return navigateTo('/login', { replace: true })
-  }
-
-  const currentUser = await waitForCurrentUser(auth)
-
-  if (!currentUser) {
-    const redirect = useCookie('redirect')
-    redirect.value = to.fullPath
-    return navigateTo('/login', { replace: true })
-  }
-})
+  return;
+});

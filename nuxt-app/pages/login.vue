@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { toTypedSchema } from '@vee-validate/zod'
-import { useForm, Field as VeeField } from 'vee-validate'
+import { toTypedSchema } from "@vee-validate/zod";
+import { useForm, Field as VeeField } from "vee-validate";
 // import { toast } from 'vue-sonner'
-import { z } from 'zod'
-import { Button } from '@/components/ui/button'
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,70 +11,78 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
+} from "@/components/ui/card";
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  type User,
-} from 'firebase/auth';
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { getAuth, signInWithEmailAndPassword, type User } from "firebase/auth";
+import { useAuthStore } from "~/store/auth";
 
 definePageMeta({
-  layout: false
+  layout: false,
 });
 
 // TODO: 状態管理実装？
-const message = ref('');
+const message = ref("");
 
 onMounted(() => {
   if (localStorage.message) {
-      message.value = localStorage.message;
-      localStorage.message = "";
-    }
-})
+    message.value = localStorage.message;
+    localStorage.message = "";
+  }
+});
 
 const formSchema = toTypedSchema(
   z.object({
     email: z
       .string()
-      .min(1, 'email must be at least 1 characters.')
-      .max(50, 'email must be at most 50 characters.'),
-      // .regex(
-      //   /^\w+$/,
-      //   'Username can only contain letters, numbers, and underscores.',
-      // ),
+      .min(1, "email must be at least 1 characters.")
+      .max(50, "email must be at most 50 characters."),
+    // .regex(
+    //   /^\w+$/,
+    //   'Username can only contain letters, numbers, and underscores.',
+    // ),
     password: z
       .string()
-      .min(1, 'password must be at least 1 characters.')
-      .max(50, 'password must be at most 50 characters.')
+      .min(1, "password must be at least 1 characters.")
+      .max(50, "password must be at most 50 characters."),
   }),
-)
+);
 
 const { handleSubmit, resetForm } = useForm({
   validationSchema: formSchema,
   initialValues: {
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   },
-})
+});
 
 // TODO: piniaで実装
-const onSubmit = handleSubmit(async(data): Promise<void> => {
+const onSubmit = handleSubmit(async (data): Promise<void> => {
   await signInWithEmailAndPassword(getAuth(), data.email, data.password)
-    .then(() => {
-      navigateTo('/');
-    }).catch((err) => {
-      message.value = 'ログインに失敗しました';
-      console.error(err);
+    .then((result) => {
+      const auth = {
+        uid: result.user.uid,
+        displayName: result.user.displayName,
+        email: result.user.email,
+        refreshToken: result.user.refreshToken,
+      };
+      const authStore = useAuthStore();
+      authStore.updateAuth(auth);
+
+      sessionStorage.setItem("user", JSON.stringify(auth));
+      navigateTo("/");
     })
-})
+    .catch((err) => {
+      message.value = "ログインに失敗しました";
+      console.error(err);
+    });
+});
 </script>
 
 <template>
@@ -82,9 +90,7 @@ const onSubmit = handleSubmit(async(data): Promise<void> => {
   <Card class="w-full sm:max-w-md mt-4 m-auto mt-16">
     <CardHeader class="text-center">
       <CardTitle class="text-xl pt-2 pb-2">Login</CardTitle>
-      <CardDescription>
-        ユーザー情報をご入力ください
-      </CardDescription>
+      <CardDescription> ユーザー情報をご入力ください </CardDescription>
     </CardHeader>
     <CardContent>
       <form id="form-vee-input" @submit="onSubmit">
@@ -126,9 +132,7 @@ const onSubmit = handleSubmit(async(data): Promise<void> => {
         <Button type="button" variant="outline" @click="resetForm">
           Reset
         </Button>
-        <Button type="submit" form="form-vee-input">
-          Login
-        </Button>
+        <Button type="submit" form="form-vee-input"> Login </Button>
       </Field>
     </CardFooter>
   </Card>
