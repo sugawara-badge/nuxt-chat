@@ -1,11 +1,23 @@
-<script setup>
-import { collection, getFirestore, query, getDocs } from "firebase/firestore";
+<script setup lang="ts">
+import {
+  collection,
+  getFirestore,
+  query,
+  getDocs,
+  Timestamp,
+} from "firebase/firestore";
 
-const users = [
-  { id: 1, name: "1郎" },
-  { id: 2, name: "2郎" },
-  { id: 3, name: "3郎" },
-];
+type RoomData = {
+  name: string;
+  thumbnailUrl: string;
+  createdAt: Timestamp;
+};
+
+type Room = RoomData & {
+  id: string;
+};
+
+const rooms: Ref<Room[]> = ref([]);
 
 onMounted(() => {
   getRooms();
@@ -15,22 +27,25 @@ const getRooms = async () => {
   const db = getFirestore();
   const q = query(collection(db, "rooms"));
   const querySnapshot = await getDocs(q);
-  const users = querySnapshot.docs.map((doc) => {
-    console.log(doc.data());
-  });
+
+  rooms.value = querySnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...(doc.data() as RoomData),
+  }));
 };
 </script>
 
 <template>
-  <div class="user-list">
+  <div class="room-list">
     <h2 class="text-xl pt-4 pb-4">ルーム一覧</h2>
     <ul>
-      <li v-for="user in users" class="">
+      <li v-for="room in rooms" :key="room.id">
         <NuxtLink
-          :to="{ name: 'chats-id', params: { id: user.id } }"
+          :to="{ name: 'chats-id', params: { id: room.id } }"
           class="inline-block p-2"
-          >{{ user.name }}</NuxtLink
         >
+          {{ room.name }}
+        </NuxtLink>
         <hr />
       </li>
     </ul>
