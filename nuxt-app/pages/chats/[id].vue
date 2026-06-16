@@ -1,21 +1,23 @@
 <script setup lang="ts">
 import {
   Field,
-  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
 
 import {
+  addDoc,
   collection,
   documentId,
   getDocs,
   getFirestore,
   orderBy,
   query,
+  serverTimestamp,
   Timestamp,
   where,
 } from "firebase/firestore";
+import { useAuthStore } from "~/store/auth";
 
 type RoomData = {
   name: string;
@@ -29,6 +31,8 @@ type Room = RoomData & {
 
 type MessageData = {
   message: string;
+  name: string;
+  photoUrl: string;
   createdAt: Timestamp;
 };
 
@@ -37,8 +41,24 @@ type Message = MessageData & {
 };
 
 const route = useRoute();
+const authStore = useAuthStore();
 const room = ref<Room | null>(null);
 const messages = ref<Message[]>([]);
+const messageBody = ref("");
+
+const fetchMessages = async (roomId: string) => {
+  const db = getFirestore();
+  const messagesQuery = query(
+    collection(db, "rooms", roomId, "messages"),
+    orderBy("createdAt", "asc"),
+  );
+  const messagesSnapshot = await getDocs(messagesQuery);
+
+  messages.value = messagesSnapshot.docs.map((messageDoc) => ({
+    id: messageDoc.id,
+    ...(messageDoc.data() as MessageData),
+  }));
+};
 
 onMounted(async () => {
   const db = getFirestore();
@@ -58,23 +78,31 @@ onMounted(async () => {
     ...(roomDoc.data() as RoomData),
   };
 
-  const messagesQuery = query(
-    collection(db, "rooms", roomDoc.id, "messages"),
-    orderBy("createdAt", "asc"),
-  );
-  const messagesSnapshot = await getDocs(messagesQuery);
-
-  messages.value = messagesSnapshot.docs.map((messageDoc) => ({
-    id: messageDoc.id,
-    ...(messageDoc.data() as MessageData),
-  }));
-
-  console.log(room.value);
-  console.log(messages.value);
+  await fetchMessages(roomDoc.id);
 });
 
-const onSubmit = () => {
-  console.log("onsubmit-----");
+const onSubmit = async () => {
+  const text = messageBody.value.trim();
+  if (!text || !room.value) {
+    return;
+  }
+
+  const db = getFirestore();
+
+  try {
+    await addDoc(collection(db, "rooms", room.value.id, "messages"), {
+      message: text,
+      name: authStore.displayName,
+      photoUrl: "/yama.webp",
+      createdAt: serverTimestamp(),
+    });
+
+    messageBody.value = "";
+    await fetchMessages(room.value.id);
+    console.log("メッセージ送信に成功しました。");
+  } catch (error) {
+    console.error(error);
+  }
 };
 </script>
 
@@ -83,8 +111,7 @@ const onSubmit = () => {
     <h2 class="text-xl pt-4 pb-4">{{ room?.name }}</h2>
     <ul>
       <li v-for="message in messages" :key="message.id">
-        <!-- TODO: 画像アップロード -->
-        <img src="/yama.webp" alt="" />
+        <img :src="message.photoUrl" alt="" />
         <div class="message">
           <span>{{ message.createdAt.toDate() }}</span>
           <p>{{ message.message }}</p>
@@ -94,29 +121,25 @@ const onSubmit = () => {
   </div>
   <Card class="w-full sm:max-w-md">
     <CardContent>
-      <form id="form-vee-demo" @submit="onSubmit">
+      <form id="form-vee-demo" @submit.prevent="onSubmit">
         <FieldGroup>
-          <VeeField v-slot="{ field, errors }" name="title">
-            <Field :data-invalid="!!errors.length">
-              <FieldLabel for="form-vee-demo-title">
-                メッセージを送信する
-              </FieldLabel>
-              <Input
-                id="form-vee-demo-title"
-                v-bind="field"
-                placeholder="Input Message"
-                autocomplete="off"
-                :aria-invalid="!!errors.length"
-              />
-              <FieldError v-if="errors.length" :errors="errors" />
-            </Field>
-          </VeeField>
+          <Field>
+            <FieldLabel for="form-vee-demo-title">
+              メッセージを送信する
+            </FieldLabel>
+            <Input
+              id="form-vee-demo-title"
+              v-model="messageBody"
+              placeholder="Input Message"
+              autocomplete="off"
+            />
+          </Field>
         </FieldGroup>
       </form>
     </CardContent>
     <CardFooter>
       <Field orientation="horizontal">
-        <Button type="button" variant="outline" @click="resetForm">
+        <Button type="button" variant="outline" @click="messageBody = ''">
           Reset
         </Button>
         <Button type="submit" form="form-vee-demo"> Submit </Button>
@@ -136,6 +159,10 @@ const onSubmit = () => {
   width: 50px;
 }
 .chat ul li .message {
-  margin-left: 5px;
+  margin-left: 10px;
+}
+.chat ul li .message span {
+  color: darkgray;
+  font-size: 13px;
 }
 </style>
