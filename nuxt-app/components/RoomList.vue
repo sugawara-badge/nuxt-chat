@@ -38,6 +38,7 @@ const getRooms = async () => {
 <template>
   <div class="room-list">
     <h2 class="text-xl pt-4 pb-4">ルーム一覧</h2>
+    <CreateRoom />
     <ul>
       <li v-for="room in rooms" :key="room.id">
         <NuxtLink
