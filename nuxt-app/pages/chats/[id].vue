@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 
 import {
   addDoc,
@@ -113,7 +109,8 @@ const onSubmit = async () => {
       <li v-for="message in messages" :key="message.id">
         <img :src="message.photoUrl" alt="" />
         <div class="message">
-          <span>{{ message.createdAt.toDate() }}</span>
+          <span class="message_name">{{ message.name }}</span>
+          <span class="message_time">{{ message.createdAt.toDate() }}</span>
           <p>{{ message.message }}</p>
         </div>
       </li>
@@ -160,6 +157,14 @@ const onSubmit = async () => {
 }
 .chat ul li .message {
   margin-left: 10px;
+}
+.chat ul li .message .message_name {
+  font-size: 16px;
+  color: #000;
+  font-weight: bold;
+}
+.chat ul li .message .message_time {
+  margin-left: 5px;
 }
 .chat ul li .message span {
   color: darkgray;
