@@ -27,6 +27,7 @@ interface StoredUser {
 }
 
 const auth = ref<StoredUser | null>(null);
+const fileInputRef = useTemplateRef<HTMLInputElement>("fileInput");
 
 onMounted(() => {
   const storedUser = sessionStorage.getItem("user");
@@ -43,6 +44,14 @@ const logOut = (): void => {
     navigateTo("/login");
   });
 };
+
+const changeIcon = () => {
+  fileInputRef.value?.click();
+};
+
+const updateIcon = () => {
+  console.log("update-i-------------");
+};
 </script>
 
 <template>
@@ -55,14 +64,21 @@ const logOut = (): void => {
             <SidebarMenuButton size="lg">
               <div
                 class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
+                @click="changeIcon"
               >
+                <input
+                  ref="fileInput"
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  @change="updateIcon"
+                />
                 <img src="/yama.webp" alt="" />
               </div>
               <div class="grid flex-1 text-left text-sm leading-tight">
                 <span class="truncate font-semibold">{{
                   auth?.displayName
                 }}</span>
-                <!-- <span class="truncate text-xs">Enterprise</span> -->
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -70,7 +86,7 @@ const logOut = (): void => {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Platform</SidebarGroupLabel>
+          <!-- <SidebarGroupLabel>Platform</SidebarGroupLabel> -->
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
