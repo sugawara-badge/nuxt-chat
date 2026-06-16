@@ -1,38 +1,93 @@
 <script setup lang="ts">
 import {
   Field,
-  FieldContent,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-  FieldLegend,
-  FieldSeparator,
-  FieldSet,
-  FieldTitle,
-} from '@/components/ui/field'
+} from "@/components/ui/field";
+
+import {
+  collection,
+  documentId,
+  getDocs,
+  getFirestore,
+  orderBy,
+  query,
+  Timestamp,
+  where,
+} from "firebase/firestore";
+
+type RoomData = {
+  name: string;
+  thumbnailUrl: string;
+  createdAt: Timestamp;
+};
+
+type Room = RoomData & {
+  id: string;
+};
+
+type MessageData = {
+  message: string;
+  createdAt: Timestamp;
+};
+
+type Message = MessageData & {
+  id: string;
+};
+
+const route = useRoute();
+const room = ref<Room | null>(null);
+const messages = ref<Message[]>([]);
+
+onMounted(async () => {
+  const db = getFirestore();
+  const q = query(
+    collection(db, "rooms"),
+    where(documentId(), "==", route.params.id as string),
+  );
+  const querySnapshot = await getDocs(q);
+
+  if (querySnapshot.empty) {
+    return;
+  }
+
+  const roomDoc = querySnapshot.docs[0];
+  room.value = {
+    id: roomDoc.id,
+    ...(roomDoc.data() as RoomData),
+  };
+
+  const messagesQuery = query(
+    collection(db, "rooms", roomDoc.id, "messages"),
+    orderBy("createdAt", "asc"),
+  );
+  const messagesSnapshot = await getDocs(messagesQuery);
+
+  messages.value = messagesSnapshot.docs.map((messageDoc) => ({
+    id: messageDoc.id,
+    ...(messageDoc.data() as MessageData),
+  }));
+
+  console.log(room.value);
+  console.log(messages.value);
+});
 
 const onSubmit = () => {
-  console.log('onsubmit-----')
-}
+  console.log("onsubmit-----");
+};
 </script>
 
 <template>
   <div class="chat">
-    <h2 class="text-xl pt-4 pb-4">チャット</h2>
+    <h2 class="text-xl pt-4 pb-4">{{ room?.name }}</h2>
     <ul>
-      <li>こんにちは</li>
-      <li>こんばんは</li>
+      <li v-for="message in messages" :key="message.id">
+        {{ message.message }}
+      </li>
     </ul>
   </div>
-
   <Card class="w-full sm:max-w-md">
-    <!-- <CardHeader>
-      <CardTitle>Bug Report</CardTitle>
-      <CardDescription>
-        Help us improve by reporting bugs you encounter.
-      </CardDescription>
-    </CardHeader> -->
     <CardContent>
       <form id="form-vee-demo" @submit="onSubmit">
         <FieldGroup>
@@ -87,9 +142,7 @@ const onSubmit = () => {
         <Button type="button" variant="outline" @click="resetForm">
           Reset
         </Button>
-        <Button type="submit" form="form-vee-demo">
-          Submit
-        </Button>
+        <Button type="submit" form="form-vee-demo"> Submit </Button>
       </Field>
     </CardFooter>
   </Card>
