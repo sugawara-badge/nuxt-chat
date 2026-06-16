@@ -83,7 +83,12 @@ const onSubmit = () => {
     <h2 class="text-xl pt-4 pb-4">{{ room?.name }}</h2>
     <ul>
       <li v-for="message in messages" :key="message.id">
-        {{ message.message }}
+        <!-- TODO: 画像アップロード -->
+        <img src="/yama.webp" alt="" />
+        <div class="message">
+          <span>{{ message.createdAt.toDate() }}</span>
+          <p>{{ message.message }}</p>
+        </div>
       </li>
     </ul>
   </div>
@@ -106,37 +111,9 @@ const onSubmit = () => {
               <FieldError v-if="errors.length" :errors="errors" />
             </Field>
           </VeeField>
-          <!-- <VeeField v-slot="{ field, errors }" name="description">
-            <Field :data-invalid="!!errors.length">
-              <FieldLabel for="form-vee-demo-description">
-                Description
-              </FieldLabel>
-              <InputGroup>
-                <InputGroupTextarea
-                  id="form-vee-demo-description"
-                  v-bind="field"
-                  placeholder="I'm having an issue with the login button on mobile."
-                  :rows="6"
-                  class="min-h-24 resize-none"
-                  :aria-invalid="!!errors.length"
-                />
-                <InputGroupAddon align="block-end">
-                  <InputGroupText class="tabular-nums">
-                    {{ field.value?.length || 0 }}/100 characters
-                  </InputGroupText>
-                </InputGroupAddon>
-              </InputGroup>
-              <FieldDescription>
-                Include steps to reproduce, expected behavior, and what actually
-                happened.
-              </FieldDescription>
-              <FieldError v-if="errors.length" :errors="errors" />
-            </Field>
-          </VeeField> -->
         </FieldGroup>
       </form>
     </CardContent>
-
     <CardFooter>
       <Field orientation="horizontal">
         <Button type="button" variant="outline" @click="resetForm">
@@ -147,3 +124,18 @@ const onSubmit = () => {
     </CardFooter>
   </Card>
 </template>
+
+<style scoped>
+.chat ul li {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.chat ul li img {
+  width: 50px;
+}
+.chat ul li .message {
+  margin-left: 5px;
+}
+</style>
