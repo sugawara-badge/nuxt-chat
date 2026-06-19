@@ -16,7 +16,13 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { GalleryVerticalEnd } from "@lucide/vue";
-import { getAuth, signOut, updateProfile } from "firebase/auth";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut,
+  updateProfile,
+} from "firebase/auth";
+import { storeToRefs } from "pinia";
 import { useAuthStore } from "~/store/auth";
 
 import {
@@ -30,38 +36,30 @@ import {
   documentId,
 } from "firebase/firestore";
 
-interface StoredUser {
-  displayName: string | null;
-  email: string | null;
-  refreshToken: string;
-  uid: string;
-  photoURL?: string | null;
-}
-
-const auth = ref<StoredUser | null>(null);
 const fileInputRef = useTemplateRef<HTMLInputElement>("fileInput");
-const photoURL = ref("/yama.webp");
+
+const authStore = useAuthStore();
+const hoge = storeToRefs(authStore);
+
+const fuga = authStore;
+const { displayName, displayImage } = hoge;
+
+watch(displayImage, (value) => {
+  console.log("hoge displayImage changed", value);
+  console.log("fuga displayImage changed", fuga.displayImage);
+});
 
 onMounted(() => {
-  const storedUser = sessionStorage.getItem("user");
-  if (storedUser) {
-    auth.value = JSON.parse(storedUser) as StoredUser;
-    if (auth.value.photoURL) {
-      photoURL.value = auth.value.photoURL;
+  onAuthStateChanged(getAuth(), (user) => {
+    if (user) {
+      loadIcon();
     }
-  }
-
-  const currentUser = getAuth().currentUser;
-  if (currentUser?.photoURL) {
-    photoURL.value = currentUser.photoURL;
-  }
-  loadIcon();
+  });
 });
 
 const logOut = (): void => {
   signOut(getAuth()).then(() => {
     sessionStorage.removeItem("user");
-    const authStore = useAuthStore();
     authStore.logout();
     navigateTo("/login");
   });
@@ -92,6 +90,13 @@ const updateIcon = async () => {
       createdAt: serverTimestamp(),
     });
     await updateProfile(currentUser, { photoURL: imageData.id });
+
+    authStore.updateAuth({
+      displayName: currentUser.displayName,
+      displayImage: base64PhotoURL,
+    });
+    console.log("update-authStore hoge", hoge.displayImage.value);
+    console.log("update-authStore fuga", fuga.displayImage);
   } catch (error) {
     console.error(error);
   } finally {
@@ -121,7 +126,10 @@ const loadIcon = async (): Promise<void> => {
 
   const imageData = querySnapshot.docs[0].data().imageData as string;
   if (imageData) {
-    photoURL.value = imageData;
+    authStore.updateAuth({
+      displayName: currentUser.displayName,
+      displayImage: imageData,
+    });
   }
 };
 
@@ -154,12 +162,10 @@ const readFileAsBase64 = (selectedFile: File): Promise<string> => {
                   class="hidden"
                   @change="updateIcon"
                 />
-                <img :src="photoURL" alt="" />
+                <img :src="displayImage" alt="" />
               </div>
               <div class="grid flex-1 text-left text-sm leading-tight">
-                <span class="truncate font-semibold">{{
-                  auth?.displayName
-                }}</span>
+                <span class="truncate font-semibold">{{ displayName }}</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -208,5 +214,6 @@ const readFileAsBase64 = (selectedFile: File): Promise<string> => {
       </div>
     </SidebarInset>
   </SidebarProvider>
+  {{ displayImage }}
   <Footer />
 </template>
