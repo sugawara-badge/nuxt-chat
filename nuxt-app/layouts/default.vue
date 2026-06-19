@@ -24,6 +24,10 @@ import {
   getFirestore,
   addDoc,
   serverTimestamp,
+  query,
+  getDocs,
+  where,
+  documentId,
 } from "firebase/firestore";
 
 interface StoredUser {
@@ -51,6 +55,7 @@ onMounted(() => {
   if (currentUser?.photoURL) {
     photoURL.value = currentUser.photoURL;
   }
+  loadIcon();
 });
 
 const logOut = (): void => {
@@ -93,6 +98,30 @@ const updateIcon = async () => {
     if (fileInputRef.value) {
       fileInputRef.value.value = "";
     }
+    loadIcon();
+  }
+};
+
+const loadIcon = async (): Promise<void> => {
+  const currentUser = getAuth().currentUser;
+  if (!currentUser?.photoURL) {
+    return;
+  }
+
+  const db = getFirestore();
+  const q = query(
+    collection(db, "images"),
+    where(documentId(), "==", currentUser.photoURL),
+  );
+
+  const querySnapshot = await getDocs(q);
+  if (querySnapshot.empty) {
+    return;
+  }
+
+  const imageData = querySnapshot.docs[0].data().imageData as string;
+  if (imageData) {
+    photoURL.value = imageData;
   }
 };
 
