@@ -16,23 +16,40 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { GalleryVerticalEnd } from "@lucide/vue";
-import { getAuth, signOut } from "firebase/auth";
+import { getAuth, signOut, updateProfile } from "firebase/auth";
 import { useAuthStore } from "~/store/auth";
+
+import {
+  collection,
+  getFirestore,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 
 interface StoredUser {
   displayName: string | null;
   email: string | null;
   refreshToken: string;
   uid: string;
+  photoURL?: string | null;
 }
 
 const auth = ref<StoredUser | null>(null);
 const fileInputRef = useTemplateRef<HTMLInputElement>("fileInput");
+const photoURL = ref("/yama.webp");
 
 onMounted(() => {
   const storedUser = sessionStorage.getItem("user");
   if (storedUser) {
     auth.value = JSON.parse(storedUser) as StoredUser;
+    if (auth.value.photoURL) {
+      photoURL.value = auth.value.photoURL;
+    }
+  }
+
+  const currentUser = getAuth().currentUser;
+  if (currentUser?.photoURL) {
+    photoURL.value = currentUser.photoURL;
   }
 });
 
@@ -49,8 +66,43 @@ const changeIcon = () => {
   fileInputRef.value?.click();
 };
 
-const updateIcon = () => {
-  console.log("update-i-------------");
+const updateIcon = async () => {
+  const file = fileInputRef.value?.files?.[0];
+  if (!file) {
+    return;
+  }
+
+  const currentUser = getAuth().currentUser;
+  if (!currentUser) {
+    return;
+  }
+
+  try {
+    const base64PhotoURL = await readFileAsBase64(file);
+    const db = getFirestore();
+
+    const imageData = await addDoc(collection(db, "images"), {
+      userId: currentUser.uid,
+      imageData: base64PhotoURL,
+      createdAt: serverTimestamp(),
+    });
+    await updateProfile(currentUser, { photoURL: imageData.id });
+  } catch (error) {
+    console.error(error);
+  } finally {
+    if (fileInputRef.value) {
+      fileInputRef.value.value = "";
+    }
+  }
+};
+
+const readFileAsBase64 = (selectedFile: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(selectedFile);
+  });
 };
 </script>
 
@@ -73,7 +125,7 @@ const updateIcon = () => {
                   class="hidden"
                   @change="updateIcon"
                 />
-                <img src="/yama.webp" alt="" />
+                <img :src="photoURL" alt="" />
               </div>
               <div class="grid flex-1 text-left text-sm leading-tight">
                 <span class="truncate font-semibold">{{
