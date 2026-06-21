@@ -84,9 +84,9 @@ const onSubmit = handleSubmit(async (data): Promise<void> => {
 </script>
 
 <template>
+  <Header />
   <h2 class="text-center pt-16" v-if="message">{{ message }}</h2>
-  <h2>チャ。</h2>
-  <Card class="w-full sm:max-w-md mt-4 m-auto mt-16">
+  <Card class="w-full sm:max-w-md mt-4 m-auto mt-16 login">
     <CardHeader class="text-center">
       <CardTitle class="text-xl pt-2 pb-2">Login</CardTitle>
       <CardDescription> ユーザー情報をご入力ください </CardDescription>
@@ -141,3 +141,11 @@ const onSubmit = handleSubmit(async (data): Promise<void> => {
   <!-- TODO: 共通化 -->
   <Footer />
 </template>
+
+<style scoped>
+@media screen and (max-width: 768px) {
+  .login {
+    width: 350px;
+  }
+}
+</style>
