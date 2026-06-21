@@ -28,6 +28,7 @@ import {
   collection,
   getFirestore,
   addDoc,
+  updateDoc,
   serverTimestamp,
   query,
   getDocs,
@@ -96,11 +97,29 @@ const updateIcon = async () => {
     const base64PhotoURL = await readFileAsBase64(file);
     const db = getFirestore();
 
-    const imageData = await addDoc(collection(db, "images"), {
-      userId: currentUser.uid,
-      imageData: base64PhotoURL,
-      createdAt: serverTimestamp(),
-    });
+    let imageData: { id: string };
+    if (!currentUser.photoURL) {
+      const docRef = await addDoc(collection(db, "images"), {
+        userId: currentUser.uid,
+        imageData: base64PhotoURL,
+        createdAt: serverTimestamp(),
+      });
+      imageData = docRef;
+    } else {
+      const q = query(
+        collection(db, "images"),
+        where("userId", "==", currentUser.uid),
+      );
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        throw new Error("Image document not found");
+      }
+      const imageDoc = querySnapshot.docs[0];
+      await updateDoc(imageDoc.ref, {
+        imageData: base64PhotoURL,
+      });
+      imageData = imageDoc;
+    }
     await updateProfile(currentUser, { photoURL: imageData.id });
 
     store.updateAuth({
