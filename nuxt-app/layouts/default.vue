@@ -16,7 +16,12 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { GalleryVerticalEnd } from "@lucide/vue";
-import { getAuth, signOut, updateProfile } from "firebase/auth";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut,
+  updateProfile,
+} from "firebase/auth";
 import { useAuthStore } from "~/store/auth";
 
 import {
@@ -40,9 +45,15 @@ interface StoredUser {
 
 const auth = ref<StoredUser | null>(null);
 const fileInputRef = useTemplateRef<HTMLInputElement>("fileInput");
-const photoURL = ref("/yama.webp");
+const photoURL = ref("");
+const store = useAuthStore();
 
 onMounted(() => {
+  onAuthStateChanged(getAuth(), (user) => {
+    if (user) {
+      loadIcon();
+    }
+  });
   const storedUser = sessionStorage.getItem("user");
   if (storedUser) {
     auth.value = JSON.parse(storedUser) as StoredUser;
@@ -55,7 +66,6 @@ onMounted(() => {
   if (currentUser?.photoURL) {
     photoURL.value = currentUser.photoURL;
   }
-  loadIcon();
 });
 
 const logOut = (): void => {
@@ -92,6 +102,11 @@ const updateIcon = async () => {
       createdAt: serverTimestamp(),
     });
     await updateProfile(currentUser, { photoURL: imageData.id });
+
+    store.updateAuth({
+      displayName: currentUser.displayName,
+      displayImage: imageData.id,
+    });
   } catch (error) {
     console.error(error);
   } finally {
@@ -187,7 +202,6 @@ const readFileAsBase64 = (selectedFile: File): Promise<string> => {
       <SidebarFooter />
       <SidebarRail />
     </Sidebar>
-
     <SidebarInset>
       <header
         class="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12"
