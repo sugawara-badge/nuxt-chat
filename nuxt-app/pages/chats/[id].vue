@@ -172,7 +172,7 @@ const loadIcon = async (): Promise<any> => {
   padding-bottom: 10px;
 }
 .chat ul li img {
-  width: 50px;
+  max-width: 100px;
 }
 .chat ul li .message {
   margin-left: 10px;
