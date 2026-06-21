@@ -15,6 +15,13 @@ import {
 } from "firebase/firestore";
 import { useAuthStore } from "~/store/auth";
 
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut,
+  updateProfile,
+} from "firebase/auth";
+
 type RoomData = {
   name: string;
   thumbnailUrl: string;
@@ -29,6 +36,7 @@ type MessageData = {
   message: string;
   name: string;
   photoUrl: string;
+  userId: string;
   createdAt: Timestamp;
 };
 
@@ -41,6 +49,29 @@ const authStore = useAuthStore();
 const room = ref<Room | null>(null);
 const messages = ref<Message[]>([]);
 const messageBody = ref("");
+const photoURL = ref("");
+const userPhotoMap = ref<Record<string, string>>({});
+
+const loadUserPhoto = async (userId: string): Promise<void> => {
+  if (userPhotoMap.value[userId]) {
+    return;
+  }
+
+  const db = getFirestore();
+  const q = query(collection(db, "images"), where("userId", "==", userId));
+  const querySnapshot = await getDocs(q);
+  if (querySnapshot.empty) {
+    userPhotoMap.value[userId] = "";
+    return;
+  }
+
+  const imageData = querySnapshot.docs[0].data().imageData as string;
+  userPhotoMap.value[userId] = imageData ?? "";
+};
+
+const getUserPhoto = (userId: string): string => {
+  return userPhotoMap.value[userId] ?? "";
+};
 
 const fetchMessages = async (roomId: string) => {
   const db = getFirestore();
@@ -54,9 +85,22 @@ const fetchMessages = async (roomId: string) => {
     id: messageDoc.id,
     ...(messageDoc.data() as MessageData),
   }));
+
+  const userIds = [...new Set(messages.value.map((message) => message.userId))];
+  await Promise.all(userIds.map((userId) => loadUserPhoto(userId)));
 };
 
 onMounted(async () => {
+  console.log("userPhotoMap-----", userPhotoMap);
+
+  onAuthStateChanged(getAuth(), (user) => {
+    if (user) {
+      loadIcon();
+      // console.log("hoge-------", hoge);
+      // photoURL.value = hoge;
+    }
+  });
+
   const db = getFirestore();
   const q = query(
     collection(db, "rooms"),
@@ -86,18 +130,45 @@ const onSubmit = async () => {
   const db = getFirestore();
 
   try {
+    console.log("authStore.authId-------", authStore.authId);
+
     await addDoc(collection(db, "rooms", room.value.id, "messages"), {
       message: text,
       name: authStore.displayName,
       photoUrl: "/yama.webp",
+      userId: authStore.authId,
       createdAt: serverTimestamp(),
     });
 
     messageBody.value = "";
     await fetchMessages(room.value.id);
+    await loadUserPhoto(authStore.authId);
     console.log("メッセージ送信に成功しました。");
   } catch (error) {
     console.error(error);
+  }
+};
+
+const loadIcon = async (): Promise<any> => {
+  const currentUser = getAuth().currentUser;
+  if (!currentUser?.photoURL) {
+    return;
+  }
+
+  const db = getFirestore();
+  const q = query(
+    collection(db, "images"),
+    where(documentId(), "==", currentUser.photoURL),
+  );
+
+  const querySnapshot = await getDocs(q);
+  if (querySnapshot.empty) {
+    return;
+  }
+
+  const imageData = querySnapshot.docs[0].data().imageData as string;
+  if (imageData) {
+    photoURL.value = imageData;
   }
 };
 </script>
@@ -107,7 +178,7 @@ const onSubmit = async () => {
     <h2 class="text-xl pt-4 pb-4">{{ room?.name }}</h2>
     <ul>
       <li v-for="message in messages" :key="message.id">
-        <img :src="message.photoUrl" alt="" />
+        <img :src="getUserPhoto(message.userId)" alt="" />
         <div class="message">
           <span class="message_name">{{ message.name }}</span>
           <span class="message_time">{{ message.createdAt.toDate() }}</span>
@@ -153,7 +224,7 @@ const onSubmit = async () => {
   padding-bottom: 10px;
 }
 .chat ul li img {
-  width: 50px;
+  max-width: 100px;
 }
 .chat ul li .message {
   margin-left: 10px;
