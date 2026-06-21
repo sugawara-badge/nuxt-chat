@@ -85,6 +85,7 @@ const onSubmit = handleSubmit(async (data): Promise<void> => {
 
 <template>
   <h2 class="text-center pt-16" v-if="message">{{ message }}</h2>
+  <h2>チャ。</h2>
   <Card class="w-full sm:max-w-md mt-4 m-auto mt-16">
     <CardHeader class="text-center">
       <CardTitle class="text-xl pt-2 pb-2">Login</CardTitle>
