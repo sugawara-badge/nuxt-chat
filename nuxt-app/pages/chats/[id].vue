@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
-
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
   addDoc,
   collection,
@@ -18,6 +13,7 @@ import {
   where,
 } from "firebase/firestore";
 import { useAuthStore } from "~/store/auth";
+import { getAuth } from "firebase/auth";
 
 type RoomData = {
   name: string;
@@ -93,7 +89,7 @@ const onSubmit = async () => {
     await addDoc(collection(db, "rooms", room.value.id, "messages"), {
       message: text,
       name: authStore.displayName,
-      photoUrl: "/yama.webp",
+      photoUrl: await loadIcon(),
       createdAt: serverTimestamp(),
     });
 
@@ -104,6 +100,25 @@ const onSubmit = async () => {
     console.error(error);
   }
 };
+
+const loadIcon = async (): Promise<any> => {
+  const currentUser = getAuth().currentUser;
+  if (!currentUser?.photoURL) {
+    return;
+  }
+
+  const db = getFirestore();
+  const q = query(
+    collection(db, "images"),
+    where(documentId(), "==", currentUser.photoURL),
+  );
+  const querySnapshot = await getDocs(q);
+  if (querySnapshot.empty) {
+    return;
+  }
+
+  return querySnapshot.docs[0].data().imageData as string;
+};
 </script>
 
 <template>
@@ -113,7 +128,8 @@ const onSubmit = async () => {
       <li v-for="message in messages" :key="message.id">
         <img :src="message.photoUrl" alt="" />
         <div class="message">
-          <span>{{ message.createdAt.toDate() }}</span>
+          <span class="message_name">{{ message.name }}</span>
+          <span class="message_time">{{ message.createdAt.toDate() }}</span>
           <p>{{ message.message }}</p>
         </div>
       </li>
@@ -160,6 +176,14 @@ const onSubmit = async () => {
 }
 .chat ul li .message {
   margin-left: 10px;
+}
+.chat ul li .message .message_name {
+  font-size: 16px;
+  color: #000;
+  font-weight: bold;
+}
+.chat ul li .message .message_time {
+  margin-left: 5px;
 }
 .chat ul li .message span {
   color: darkgray;
