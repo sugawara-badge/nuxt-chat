@@ -9,6 +9,7 @@
 header {
   text-align: center;
   font-family: serif;
+  padding-top: 50px;
 }
 header h1 {
   font-size: 200px;
@@ -23,9 +24,6 @@ header span {
 }
 
 @media screen and (max-width: 768px) {
-  header {
-    padding-top: 50px;
-  }
   header h1 {
     font-size: 100px;
     padding-left: 50px;
