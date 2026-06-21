@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-
 import {
   addDoc,
   collection,
@@ -14,6 +13,7 @@ import {
   where,
 } from "firebase/firestore";
 import { useAuthStore } from "~/store/auth";
+import { getAuth } from "firebase/auth";
 
 type RoomData = {
   name: string;
@@ -89,7 +89,7 @@ const onSubmit = async () => {
     await addDoc(collection(db, "rooms", room.value.id, "messages"), {
       message: text,
       name: authStore.displayName,
-      photoUrl: "/yama.webp",
+      photoUrl: await loadIcon(),
       createdAt: serverTimestamp(),
     });
 
@@ -99,6 +99,25 @@ const onSubmit = async () => {
   } catch (error) {
     console.error(error);
   }
+};
+
+const loadIcon = async (): Promise<any> => {
+  const currentUser = getAuth().currentUser;
+  if (!currentUser?.photoURL) {
+    return;
+  }
+
+  const db = getFirestore();
+  const q = query(
+    collection(db, "images"),
+    where(documentId(), "==", currentUser.photoURL),
+  );
+  const querySnapshot = await getDocs(q);
+  if (querySnapshot.empty) {
+    return;
+  }
+
+  return querySnapshot.docs[0].data().imageData as string;
 };
 </script>
 
