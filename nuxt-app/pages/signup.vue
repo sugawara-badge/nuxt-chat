@@ -35,11 +35,11 @@ const formSchema = toTypedSchema(
     user_name: z
       .string()
       .min(1, "Username must be at least 1 characters.")
-      .max(50, "Username must be at most 50 characters.")
-      .regex(
-        /^\w+$/,
-        "Username can only contain letters, numbers, and underscores.",
-      ),
+      .max(50, "Username must be at most 50 characters."),
+    // .regex(
+    //   /^\w+$/,
+    //   "Username can only contain letters, numbers, and underscores.",
+    // ),
     email: z
       .string()
       .min(1, "email must be at least 1 characters.")
