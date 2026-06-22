@@ -129,7 +129,17 @@ const loadIcon = async (): Promise<any> => {
         <img :src="message.photoUrl" alt="" />
         <div class="message">
           <span class="message_name">{{ message.name }}</span>
-          <span class="message_time">{{ message.createdAt.toDate() }}</span>
+          <span class="message_time">{{
+            message.createdAt.toDate().getHours() +
+            ":" +
+            message.createdAt.toDate().getMinutes() +
+            " " +
+            message.createdAt.toDate().getFullYear() +
+            "/" +
+            (message.createdAt.toDate().getMonth() + 1) +
+            "/" +
+            message.createdAt.toDate().getDate()
+          }}</span>
           <p>{{ message.message }}</p>
         </div>
       </li>
@@ -172,7 +182,7 @@ const loadIcon = async (): Promise<any> => {
   padding-bottom: 10px;
 }
 .chat ul li img {
-  width: 50px;
+  max-width: 50px;
 }
 .chat ul li .message {
   margin-left: 10px;

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm, Field as VeeField } from "vee-validate";
-// import { toast } from 'vue-sonner'
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,15 +11,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { getAuth, signInWithEmailAndPassword, type User } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useAuthStore } from "~/store/auth";
 
 definePageMeta({
@@ -66,16 +59,21 @@ const { handleSubmit, resetForm } = useForm({
 const onSubmit = handleSubmit(async (data): Promise<void> => {
   await signInWithEmailAndPassword(getAuth(), data.email, data.password)
     .then((result) => {
-      const auth = {
-        uid: result.user.uid,
-        displayName: result.user.displayName,
-        email: result.user.email,
-        refreshToken: result.user.refreshToken,
-      };
       const authStore = useAuthStore();
-      authStore.updateAuth(auth);
+      authStore.updateAuth({
+        authId: result.user.uid,
+        displayName: result.user.displayName,
+      });
 
-      sessionStorage.setItem("user", JSON.stringify(auth));
+      sessionStorage.setItem(
+        "user",
+        JSON.stringify({
+          uid: result.user.uid,
+          displayName: result.user.displayName,
+          email: result.user.email,
+          refreshToken: result.user.refreshToken,
+        }),
+      );
       navigateTo("/");
     })
     .catch((err) => {
@@ -86,8 +84,9 @@ const onSubmit = handleSubmit(async (data): Promise<void> => {
 </script>
 
 <template>
+  <Header />
   <h2 class="text-center pt-16" v-if="message">{{ message }}</h2>
-  <Card class="w-full sm:max-w-md mt-4 m-auto mt-16">
+  <Card class="w-full sm:max-w-md mt-4 m-auto mt-16 login">
     <CardHeader class="text-center">
       <CardTitle class="text-xl pt-2 pb-2">Login</CardTitle>
       <CardDescription> ユーザー情報をご入力ください </CardDescription>
@@ -142,3 +141,11 @@ const onSubmit = handleSubmit(async (data): Promise<void> => {
   <!-- TODO: 共通化 -->
   <Footer />
 </template>
+
+<style scoped>
+@media screen and (max-width: 768px) {
+  .login {
+    width: 350px;
+  }
+}
+</style>
