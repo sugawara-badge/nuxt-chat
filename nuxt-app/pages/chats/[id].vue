@@ -126,7 +126,9 @@ const loadIcon = async (): Promise<any> => {
     <h2 class="text-xl pt-4 pb-4">{{ room?.name }}</h2>
     <ul>
       <li v-for="message in messages" :key="message.id">
-        <img :src="message.photoUrl" alt="" />
+        <div class="img">
+          <img :src="message.photoUrl" alt="ユーザーのアイコン" />
+        </div>
         <div class="message">
           <span class="message_name">{{ message.name }}</span>
           <span class="message_time">{{
