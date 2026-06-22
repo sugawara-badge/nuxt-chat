@@ -49,7 +49,10 @@ const fileInputRef = useTemplateRef<HTMLInputElement>("fileInput");
 const photoURL = ref("");
 const store = useAuthStore();
 
-onMounted(() => {
+onMounted(async () => {
+  const { message } = await $fetch<{ message: string }>("/api/hello");
+  console.log(message);
+
   onAuthStateChanged(getAuth(), (user) => {
     if (user) {
       loadIcon();
