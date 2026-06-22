@@ -50,11 +50,6 @@ const photoURL = ref("");
 const store = useAuthStore();
 
 onMounted(async () => {
-  const { message } = await $fetch<{ message: string }>(
-    "https://chat-app-nu-dusky-77.vercel.app/api/hello",
-  );
-  console.log(message);
-
   onAuthStateChanged(getAuth(), (user) => {
     if (user) {
       loadIcon();
