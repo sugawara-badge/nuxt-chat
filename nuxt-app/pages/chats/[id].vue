@@ -15,6 +15,42 @@ import {
 import { useAuthStore } from "~/store/auth";
 import { getAuth } from "firebase/auth";
 
+import { ref, watch } from "vue";
+import { socket } from "~/utils/socket/socket";
+
+const isConnected = ref(false);
+const transport = ref("N/A");
+
+if (socket.connected) {
+  onConnect();
+}
+
+function onConnect() {
+  isConnected.value = true;
+  transport.value = socket.io.engine.transport.name;
+  socket.io.engine.on("upgrade", (rawTransport) => {
+    transport.value = rawTransport.name;
+  });
+}
+
+function onDisconnect() {
+  isConnected.value = false;
+  transport.value = "N/A";
+}
+
+socket.on("connect", onConnect);
+socket.on("sampleUpdate", (data: { id: string; lastUpdate: number }) => {
+  // コンポーネント側の処理
+  console.log("sampleUpdate------");
+});
+
+socket.on("message", onMessage);
+
+onBeforeUnmount(() => {
+  socket.off("connect", onConnect);
+  socket.off("disconnect", onDisconnect);
+});
+
 type RoomData = {
   name: string;
   thumbnailUrl: string;
@@ -86,20 +122,29 @@ const onSubmit = async () => {
   const db = getFirestore();
 
   try {
-    await addDoc(collection(db, "rooms", room.value.id, "messages"), {
+    let messageObj = {
       message: text,
       name: authStore.displayName,
       photoUrl: await loadIcon(),
       createdAt: serverTimestamp(),
-    });
+    };
 
+    await addDoc(
+      collection(db, "rooms", room.value.id, "messages"),
+      messageObj,
+    );
+    socket.emit("msg", messageObj);
     messageBody.value = "";
-    await fetchMessages(room.value.id);
+    // await fetchMessages(room.value.id);
     console.log("メッセージ送信に成功しました。");
   } catch (error) {
     console.error(error);
   }
 };
+
+async function onMessage(msg: any) {
+  messages.value.push(msg);
+}
 
 const loadIcon = async (): Promise<any> => {
   const currentUser = getAuth().currentUser;
@@ -129,7 +174,9 @@ const loadIcon = async (): Promise<any> => {
         <img :src="message.photoUrl" alt="" />
         <div class="message">
           <span class="message_name">{{ message.name }}</span>
-          <span class="message_time">{{
+
+          <!-- TODO: 修正 -->
+          <!-- <span class="message_time">{{
             message.createdAt.toDate().getHours() +
             ":" +
             message.createdAt.toDate().getMinutes() +
@@ -139,7 +186,8 @@ const loadIcon = async (): Promise<any> => {
             (message.createdAt.toDate().getMonth() + 1) +
             "/" +
             message.createdAt.toDate().getDate()
-          }}</span>
+          }}</span> -->
+
           <p>{{ message.message }}</p>
         </div>
       </li>

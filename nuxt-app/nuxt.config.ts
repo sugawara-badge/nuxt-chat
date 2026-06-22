@@ -61,4 +61,9 @@ export default defineNuxtConfig({
       firebaseAppId: process.env.NUXT_PUBLIC_FIREBASE_APP_ID,
     },
   },
+  nitro: {
+    experimental: {
+      websocket: true,
+    },
+  },
 });
