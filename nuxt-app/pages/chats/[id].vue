@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { useAuthStore } from "~/store/auth";
 import { getAuth } from "firebase/auth";
+import type { ChatMessagePayload } from "~/types/chat";
 
 type RoomData = {
   name: string;
@@ -25,24 +26,49 @@ type Room = RoomData & {
   id: string;
 };
 
-type MessageData = {
-  message: string;
-  name: string;
-  photoUrl: string;
-  createdAt: Timestamp;
-};
-
-type Message = MessageData & {
-  id: string;
-};
+type Message = ChatMessagePayload;
 
 const route = useRoute();
 const authStore = useAuthStore();
+const { joinRoom, leaveRoom, sendMessage, onMessage } = useChatSocket();
 const room = ref<Room | null>(null);
 const messages = ref<Message[]>([]);
 const messageBody = ref("");
 
-const fetchMessages = async (roomId: string) => {
+const toMessage = (messageDoc: {
+  id: string;
+  data: () => Record<string, unknown>;
+}): Message => {
+  const data = messageDoc.data();
+  const createdAt = data.createdAt as Timestamp;
+
+  return {
+    id: messageDoc.id,
+    message: String(data.message ?? ""),
+    name: String(data.name ?? ""),
+    photoUrl: String(data.photoUrl ?? ""),
+    createdAt: createdAt?.toDate?.().toISOString() ?? new Date().toISOString(),
+  };
+};
+
+const appendMessage = (message: Message): void => {
+  if (messages.value.some((item) => item.id === message.id)) {
+    return;
+  }
+
+  messages.value = [...messages.value, message];
+};
+
+const formatMessageTime = (createdAt: string): string => {
+  const date = new Date(createdAt);
+
+  return (
+    `${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")} ` +
+    `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
+  );
+};
+
+const fetchMessages = async (roomId: string): Promise<void> => {
   const db = getFirestore();
   const messagesQuery = query(
     collection(db, "rooms", roomId, "messages"),
@@ -50,10 +76,9 @@ const fetchMessages = async (roomId: string) => {
   );
   const messagesSnapshot = await getDocs(messagesQuery);
 
-  messages.value = messagesSnapshot.docs.map((messageDoc) => ({
-    id: messageDoc.id,
-    ...(messageDoc.data() as MessageData),
-  }));
+  messages.value = messagesSnapshot.docs.map((messageDoc) =>
+    toMessage(messageDoc),
+  );
 };
 
 onMounted(async () => {
@@ -75,36 +100,22 @@ onMounted(async () => {
   };
 
   await fetchMessages(roomDoc.id);
+  joinRoom(roomDoc.id);
+  onMessage((message) => {
+    appendMessage(message);
+  });
 });
 
-const onSubmit = async () => {
-  const text = messageBody.value.trim();
-  if (!text || !room.value) {
-    return;
+onBeforeUnmount(() => {
+  if (room.value) {
+    leaveRoom(room.value.id);
   }
+});
 
-  const db = getFirestore();
-
-  try {
-    await addDoc(collection(db, "rooms", room.value.id, "messages"), {
-      message: text,
-      name: authStore.displayName,
-      photoUrl: await loadIcon(),
-      createdAt: serverTimestamp(),
-    });
-
-    messageBody.value = "";
-    await fetchMessages(room.value.id);
-    console.log("メッセージ送信に成功しました。");
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-const loadIcon = async (): Promise<any> => {
+const loadIcon = async (): Promise<string> => {
   const currentUser = getAuth().currentUser;
   if (!currentUser?.photoURL) {
-    return;
+    return "";
   }
 
   const db = getFirestore();
@@ -114,10 +125,46 @@ const loadIcon = async (): Promise<any> => {
   );
   const querySnapshot = await getDocs(q);
   if (querySnapshot.empty) {
+    return "";
+  }
+
+  return (querySnapshot.docs[0].data().imageData as string) ?? "";
+};
+
+const onSubmit = async (): Promise<void> => {
+  const text = messageBody.value.trim();
+  if (!text || !room.value) {
     return;
   }
 
-  return querySnapshot.docs[0].data().imageData as string;
+  const db = getFirestore();
+
+  try {
+    const photoUrl = await loadIcon();
+    const docRef = await addDoc(
+      collection(db, "rooms", room.value.id, "messages"),
+      {
+        message: text,
+        name: authStore.displayName,
+        photoUrl,
+        createdAt: serverTimestamp(),
+      },
+    );
+
+    const payload: Message = {
+      id: docRef.id,
+      message: text,
+      name: authStore.displayName,
+      photoUrl,
+      createdAt: new Date().toISOString(),
+    };
+
+    appendMessage(payload);
+    sendMessage(room.value.id, payload);
+    messageBody.value = "";
+  } catch (error) {
+    console.error(error);
+  }
 };
 </script>
 
@@ -130,15 +177,7 @@ const loadIcon = async (): Promise<any> => {
         <div class="message">
           <span class="message_name">{{ message.name }}</span>
           <span class="message_time">{{
-            message.createdAt.toDate().getHours() +
-            ":" +
-            message.createdAt.toDate().getMinutes() +
-            " " +
-            message.createdAt.toDate().getFullYear() +
-            "/" +
-            (message.createdAt.toDate().getMonth() + 1) +
-            "/" +
-            message.createdAt.toDate().getDate()
+            formatMessageTime(message.createdAt)
           }}</span>
           <p>{{ message.message }}</p>
         </div>
