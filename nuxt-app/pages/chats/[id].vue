@@ -61,15 +61,37 @@ type Room = RoomData & {
   id: string;
 };
 
-type MessageData = {
+type Message = {
+  id: string;
   message: string;
   name: string;
   photoUrl: string;
-  createdAt: Timestamp;
+  createdAt: Timestamp | string | Date;
 };
 
-type Message = MessageData & {
-  id: string;
+const toMessageDate = (createdAt: Message["createdAt"]): Date => {
+  if (createdAt instanceof Timestamp) {
+    return createdAt.toDate();
+  }
+
+  if (createdAt instanceof Date) {
+    return createdAt;
+  }
+
+  if (typeof createdAt === "string" || typeof createdAt === "number") {
+    return new Date(createdAt);
+  }
+
+  return new Date();
+};
+
+const formatMessageTime = (createdAt: Message["createdAt"]): string => {
+  const date = toMessageDate(createdAt);
+
+  return (
+    `${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")} ` +
+    `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
+  );
 };
 
 const route = useRoute();
@@ -88,7 +110,7 @@ const fetchMessages = async (roomId: string) => {
 
   messages.value = messagesSnapshot.docs.map((messageDoc) => ({
     id: messageDoc.id,
-    ...(messageDoc.data() as MessageData),
+    ...(messageDoc.data() as Omit<Message, "id">),
   }));
 };
 
@@ -122,18 +144,24 @@ const onSubmit = async () => {
   const db = getFirestore();
 
   try {
-    let messageObj = {
+    const photoUrl = await loadIcon();
+    const createdAt = new Date().toISOString();
+    const messageObj = {
+      id: crypto.randomUUID(),
       message: text,
       name: authStore.displayName,
-      photoUrl: await loadIcon(),
-      createdAt: serverTimestamp(),
+      photoUrl,
+      createdAt,
     };
 
-    await addDoc(
-      collection(db, "rooms", room.value.id, "messages"),
-      messageObj,
-    );
+    await addDoc(collection(db, "rooms", room.value.id, "messages"), {
+      message: text,
+      name: authStore.displayName,
+      photoUrl,
+      createdAt: serverTimestamp(),
+    });
     socket.emit("msg", messageObj);
+    messages.value.push(messageObj);
     messageBody.value = "";
     // await fetchMessages(room.value.id);
     console.log("メッセージ送信に成功しました。");
@@ -142,7 +170,11 @@ const onSubmit = async () => {
   }
 };
 
-async function onMessage(msg: any) {
+async function onMessage(msg: Message) {
+  if (messages.value.some((message) => message.id === msg.id)) {
+    return;
+  }
+
   messages.value.push(msg);
 }
 
@@ -175,18 +207,7 @@ const loadIcon = async (): Promise<any> => {
         <div class="message">
           <span class="message_name">{{ message.name }}</span>
 
-          <!-- TODO: 修正 -->
-          <!-- <span class="message_time">{{
-            message.createdAt.toDate().getHours() +
-            ":" +
-            message.createdAt.toDate().getMinutes() +
-            " " +
-            message.createdAt.toDate().getFullYear() +
-            "/" +
-            (message.createdAt.toDate().getMonth() + 1) +
-            "/" +
-            message.createdAt.toDate().getDate()
-          }}</span> -->
+          <span class="message_time">{{ formatMessageTime(message.createdAt) }}</span>
 
           <p>{{ message.message }}</p>
         </div>
