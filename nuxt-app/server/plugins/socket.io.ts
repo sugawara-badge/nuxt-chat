@@ -56,17 +56,14 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       },
       websocket: {
         open(peer) {
-          const nodeContext = peer.ctx.node;
-          const req = nodeContext.req;
-
-          // @ts-expect-error private method
-          engine.prepare(req);
-
-          const rawSocket = nodeContext.req.socket;
-          const websocket = nodeContext.ws;
-
-          // @ts-expect-error private method
-          engine.onWebSocket(req, rawSocket, websocket);
+          // @ts-expect-error Nitro private API
+          engine.prepare(peer._internal.nodeReq);
+          // @ts-expect-error Nitro private API
+          engine.onWebSocket(
+            peer._internal.nodeReq,
+            peer._internal.nodeReq.socket,
+            peer.websocket,
+          );
         },
       },
     }),
