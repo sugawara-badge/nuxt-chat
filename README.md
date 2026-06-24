@@ -58,11 +58,25 @@ createdAt: serverTimestamp(),
 ・middlewareを書いた時、以下のエラー
 Firebase: No Firebase App '[DEFAULT]' has been created - call initializeApp() first (app/no-app).
 
+---
+
+・ERROR [unhandledRejection] Cannot read properties of undefined (reading 'node')
+→ websocket実装時
+対応: 新しいapiの記法に修正
+https://github.com/sugawara-badge/nuxt-chat/pull/17/changes/ebf09ee857dd951aeaf9575a32c94466dedc189c
+
 ## 参考
 
-・websocket
-NuxtでSocket.ioを使う
-https://qiita.com/Yohei_Suda/items/c8ca50b56dc7361db785#plugin%E4%BD%9C%E6%88%90
+・Websocket
 
-Socket.IO の紹介と導入【Next.js】
-https://zenn.dev/b13o/articles/tutorial-socketio#4.-%E3%82%AF%E3%83%A9%E3%82%A4%E3%82%A2%E3%83%B3%E3%83%88%E3%82%B5%E3%82%A4%E3%83%89%E3%81%AE%E5%AE%9F%E8%A3%85
+    ・NuxtでSocket.ioを使う
+    https://qiita.com/Yohei_Suda/items/c8ca50b56dc7361db785#plugin%E4%BD%9C%E6%88%90
+
+    ・Socket.IO の紹介と導入【Next.js】
+    https://zenn.dev/b13o/articles/tutorial-socketio#4.-%E3%82%AF%E3%83%A9%E3%82%A4%E3%82%A2%E3%83%B3%E3%83%88%E3%82%B5%E3%82%A4%E3%83%89%E3%81%AE%E5%AE%9F%E8%A3%85
+
+・Nitro
+https://qiita.com/ytnd0928/items/52be0ced58a2cd170200
+
+・Server Plugins/defineNitroPlugin
+https://zenn.dev/mm67/articles/nuxt3-server-directory#server-plugins
