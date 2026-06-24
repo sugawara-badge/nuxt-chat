@@ -18,8 +18,9 @@ import {
   addDoc,
   serverTimestamp,
 } from "firebase/firestore";
+const { $constants } = useNuxtApp();
 
-const name = ref("fuga");
+const name = ref("");
 const file = ref<File | null>(null);
 const imageBase64 = ref<string | null>(null);
 
@@ -38,13 +39,11 @@ const readFileAsBase64 = (selectedFile: File): Promise<string> => {
 };
 
 const onSubmit = async () => {
-  if (!file.value) {
-    return;
-  }
-
   try {
-    imageBase64.value = await readFileAsBase64(file.value);
     const db = getFirestore();
+    imageBase64.value = file.value
+      ? await readFileAsBase64(file.value)
+      : $constants.DEFAULT_BASE64;
 
     addDoc(collection(db, "rooms"), {
       name: name.value,
