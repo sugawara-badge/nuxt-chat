@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import {
   collection,
   getFirestore,
@@ -19,9 +18,15 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
-const name = ref("fuga");
+const { $constants } = useNuxtApp();
+const name = ref("");
 const file = ref<File | null>(null);
 const imageBase64 = ref<string | null>(null);
+const toast = useToast();
+
+const emit = defineEmits<{
+  createRoomEvent: [];
+}>();
 
 const onFileChange = (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -38,13 +43,11 @@ const readFileAsBase64 = (selectedFile: File): Promise<string> => {
 };
 
 const onSubmit = async () => {
-  if (!file.value) {
-    return;
-  }
-
   try {
-    imageBase64.value = await readFileAsBase64(file.value);
     const db = getFirestore();
+    imageBase64.value = file.value
+      ? await readFileAsBase64(file.value)
+      : $constants.DEFAULT_BASE64;
 
     addDoc(collection(db, "rooms"), {
       name: name.value,
@@ -52,10 +55,15 @@ const onSubmit = async () => {
       createdAt: serverTimestamp(),
     })
       .then(() => {
-        console.log("画像保存に成功しました。");
+        toast.success({
+          title: "Success!",
+          message: "新規ルーム作成しました。",
+        });
+        emit("createRoomEvent");
       })
       .catch((error) => {
-        console.error("error-1", error);
+        console.error("onSubmit-error");
+        console.error(error);
       });
   } catch (error) {
     console.error("error-2", error);
