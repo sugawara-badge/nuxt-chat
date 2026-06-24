@@ -11,18 +11,22 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import {
   collection,
   getFirestore,
   addDoc,
   serverTimestamp,
 } from "firebase/firestore";
-const { $constants } = useNuxtApp();
 
+const { $constants } = useNuxtApp();
 const name = ref("");
 const file = ref<File | null>(null);
 const imageBase64 = ref<string | null>(null);
+const toast = useToast();
+
+const emit = defineEmits<{
+  createRoomEvent: [];
+}>();
 
 const onFileChange = (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -51,10 +55,15 @@ const onSubmit = async () => {
       createdAt: serverTimestamp(),
     })
       .then(() => {
-        console.log("画像保存に成功しました。");
+        toast.success({
+          title: "Success!",
+          message: "新規ルーム作成しました。",
+        });
+        emit("createRoomEvent");
       })
       .catch((error) => {
-        console.error("error-1", error);
+        console.error("onSubmit-error");
+        console.error(error);
       });
   } catch (error) {
     console.error("error-2", error);

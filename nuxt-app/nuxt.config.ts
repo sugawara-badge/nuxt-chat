@@ -9,6 +9,7 @@ export default defineNuxtConfig({
     "@vee-validate/nuxt",
     "@pinia/nuxt",
     "pinia-plugin-persistedstate",
+    "nuxt-toast",
   ],
   css: ["~/assets/css/tailwind.css"],
   app: {
