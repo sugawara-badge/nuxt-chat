@@ -2,7 +2,7 @@
   <header>
     <h1>チャ。</h1>
     <p><span>ー</span>地球の運動と腸内環境、及び発毛について<span>ー</span></p>
-    <img src="/sakana.avif" alt="トップ画像" />
+    <!-- <img src="/sakana.avif" alt="トップ画像" /> -->
   </header>
 </template>
 
