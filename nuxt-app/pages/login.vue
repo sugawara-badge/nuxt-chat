@@ -82,7 +82,11 @@ const onSubmit = handleSubmit(async (data): Promise<void> => {
   //     console.error(err);
   //   });
   console.log("onsubmit---------------");
-  data_hoge.value = await $fetch("http://localhost:4000/profile");
+  // data_hoge.value = await $fetch("http://localhost:4000/profile");
+  data_hoge.value = await $fetch(
+    "https://nuxt-chat-backend.onrender.com/profile",
+  );
+
   console.log(data_hoge);
 });
 </script>
