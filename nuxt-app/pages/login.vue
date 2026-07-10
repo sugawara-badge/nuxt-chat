@@ -23,6 +23,8 @@ definePageMeta({
 // TODO: 状態管理実装？
 const message = ref("");
 
+let data_hoge = ref();
+
 onMounted(() => {
   if (localStorage.message) {
     message.value = localStorage.message;
@@ -57,29 +59,31 @@ const { handleSubmit, resetForm } = useForm({
 
 // TODO: piniaで実装
 const onSubmit = handleSubmit(async (data): Promise<void> => {
-  await signInWithEmailAndPassword(getAuth(), data.email, data.password)
-    .then((result) => {
-      const authStore = useAuthStore();
-      authStore.updateAuth({
-        authId: result.user.uid,
-        displayName: result.user.displayName,
-      });
-
-      sessionStorage.setItem(
-        "user",
-        JSON.stringify({
-          uid: result.user.uid,
-          displayName: result.user.displayName,
-          email: result.user.email,
-          refreshToken: result.user.refreshToken,
-        }),
-      );
-      navigateTo("/");
-    })
-    .catch((err) => {
-      message.value = "ログインに失敗しました";
-      console.error(err);
-    });
+  // await signInWithEmailAndPassword(getAuth(), data.email, data.password)
+  //   .then((result) => {
+  //     const authStore = useAuthStore();
+  //     authStore.updateAuth({
+  //       authId: result.user.uid,
+  //       displayName: result.user.displayName,
+  //     });
+  //     sessionStorage.setItem(
+  //       "user",
+  //       JSON.stringify({
+  //         uid: result.user.uid,
+  //         displayName: result.user.displayName,
+  //         email: result.user.email,
+  //         refreshToken: result.user.refreshToken,
+  //       }),
+  //     );
+  //     navigateTo("/");
+  //   })
+  //   .catch((err) => {
+  //     message.value = "ログインに失敗しました";
+  //     console.error(err);
+  //   });
+  console.log("onsubmit---------------");
+  data_hoge.value = await $fetch("http://localhost:4000/profile");
+  console.log(data_hoge);
 });
 </script>
 
