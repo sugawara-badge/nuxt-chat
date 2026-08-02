@@ -48,22 +48,38 @@ const { handleSubmit, resetForm } = useForm({
 const { $auth } = useNuxtApp();
 
 // TODO: piniaで実装
+// const onSubmit = handleSubmit(async (data) => {
+//   const result = await createUserWithEmailAndPassword(
+//     $auth,
+//     data.email,
+//     data.password,
+//   )
+//     .then(async (res) => {
+//       await updateProfile(res.user, { displayName: data.user_name });
+//       localStorage.message = "新規登録に成功しました";
+//       navigateTo("/login");
+//     })
+//     .catch((err) => {
+//       // TODO: 実装
+//       errorMessage.value = "ユーザーの新規作成に失敗しました";
+//       console.error(err);
+//     });
+// });
+
 const onSubmit = handleSubmit(async (data) => {
-  const result = await createUserWithEmailAndPassword(
-    $auth,
-    data.email,
-    data.password,
-  )
-    .then(async (res) => {
-      await updateProfile(res.user, { displayName: data.user_name });
-      localStorage.message = "新規登録に成功しました";
-      navigateTo("/login");
-    })
-    .catch((err) => {
-      // TODO: 実装
-      errorMessage.value = "ユーザーの新規作成に失敗しました";
-      console.error(err);
+  try {
+    await $fetch("http://localhost:4000/auth/signup", {
+      method: "POST",
+      body: {
+        name: data.user_name,
+        email: data.email,
+        password: data.password,
+      },
     });
+    navigateTo("/login");
+  } catch (error) {
+    console.log(error);
+  }
 });
 </script>
 
