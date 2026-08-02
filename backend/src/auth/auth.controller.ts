@@ -11,6 +11,7 @@ import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { User } from 'generated/prisma/client';
+import { CredentialsDto } from './dto/credentials.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -19,6 +20,11 @@ export class AuthController {
   @Post('signup')
   async create(@Body() createAuthDto: CreateAuthDto): Promise<User> {
     return await this.authService.create(createAuthDto);
+  }
+
+  @Post('signin')
+  async signIn(@Body() credentialsDto: CredentialsDto) {
+    return await this.authService.signIn(credentialsDto);
   }
 
   // @Get()
