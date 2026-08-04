@@ -20,6 +20,7 @@
     "clsx": "^2.1.1",
     "firebase": "^12.14.0",
     "nuxt": "^3.21.8",
+    "nuxt-auth-utils": "^0.5.29",
     "nuxt-toast": "^1.4.0",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
