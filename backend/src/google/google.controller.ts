@@ -1,34 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { Controller, Get, Request, UseGuards } from '@nestjs/common';
 import { GoogleService } from './google.service';
-import { CreateGoogleDto } from './dto/create-google.dto';
-import { UpdateGoogleDto } from './dto/update-google.dto';
 
 @Controller('google')
 export class GoogleController {
   constructor(private readonly googleService: GoogleService) {}
 
-  @Post()
-  create(@Body() createGoogleDto: CreateGoogleDto) {
-    return this.googleService.create(createGoogleDto);
-  }
-
+  // ここにリクエストがいくことでoauth認証フローのスタート
   @Get()
-  findAll() {
-    return this.googleService.findAll();
-  }
+  @UseGuards(AuthGuard('google'))
+  async googleAuth(@Request() req) {}
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.googleService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateGoogleDto: UpdateGoogleDto) {
-    return this.googleService.update(+id, updateGoogleDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.googleService.remove(+id);
+  // 認証フローが終了し、アクセストークンを取得したら、ここにリダイレクトされる
+  @Get('redirect')
+  @UseGuards(AuthGuard('google'))
+  googleAuthRedirect(@Request() req) {
+    // この時点でreq.userに上のほうで定義したvalidateで抜き出した認証情報が入っている(名前、メールアドレス、画像など)
+    // 具体的な処理はserviceにやらせる
+    return this.googleService.googleLogin(req);
   }
 }
