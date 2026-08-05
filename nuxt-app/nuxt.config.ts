@@ -10,6 +10,7 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "pinia-plugin-persistedstate",
     "nuxt-toast",
+    "nuxt-auth-utils",
   ],
   css: ["~/assets/css/tailwind.css"],
   app: {
