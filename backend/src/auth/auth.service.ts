@@ -41,7 +41,15 @@ export class AuthService {
         username: user.name,
       };
       const token = this.jwtService.sign(payLoad);
-      return { token };
+
+      return {
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
+      };
     }
     throw new UnauthorizedException();
   }
