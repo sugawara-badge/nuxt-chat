@@ -92,8 +92,9 @@ const { handleSubmit, resetForm } = useForm({
 
 // TODO: piniaで実装
 const onSubmit = handleSubmit(async (data): Promise<void> => {
+  const { $api } = useNuxtApp();
   try {
-    const result: any = await $fetch("http://localhost:4000/auth/signin", {
+    const result: any = await $api("/auth/signin", {
       method: "POST",
       body: {
         email: data.email,
@@ -104,10 +105,11 @@ const onSubmit = handleSubmit(async (data): Promise<void> => {
     authStore.updateAuth({
       authId: result.user.id,
       displayName: result.user.name,
+      token: result.token,
     });
     navigateTo("/");
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 });
 </script>
