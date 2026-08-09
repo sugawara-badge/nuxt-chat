@@ -14,6 +14,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
+  // Note: これはどこにreturnする？
   async validate(payload: JwtPayload): Promise<RequestUser> {
     console.log('payload------------', payload);
     return {
