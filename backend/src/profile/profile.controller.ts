@@ -1,9 +1,12 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('profile')
 export class ProfileController {
   @Get()
-  getProfile() {
+  @UseGuards(AuthGuard('jwt'))
+  getProfile(@Request() req) {
+    console.log('req---------------------------', req);
     return {
       name: 'オオタスカシバコンサルタント',
       title: 'ITコンサルタント / エンジニア',
