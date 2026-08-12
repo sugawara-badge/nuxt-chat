@@ -169,6 +169,10 @@ const onSubmit = handleSubmit(async (data): Promise<void> => {
   <div class="text-center text-sm mt-4">
     <NuxtLink to="/signup" class="text-blue-400">会員登録はこちら</NuxtLink>
   </div>
+
+  <!-- TODO: 修正 -->
+  <a href="http://localhost:4000/auth/google">Googleでログイン</a>
+
   <!-- TODO: 共通化 -->
   <Footer />
 </template>

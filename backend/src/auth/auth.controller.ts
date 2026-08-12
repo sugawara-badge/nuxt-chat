@@ -6,12 +6,18 @@ import {
   Patch,
   Param,
   Delete,
+  Res,
+  Query,
+  Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { User } from 'generated/prisma/client';
 import { CredentialsDto } from './dto/credentials.dto';
+import { randomBytes } from 'crypto';
+import type { Request, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -27,23 +33,45 @@ export class AuthController {
     return await this.authService.signIn(credentialsDto);
   }
 
-  // @Get()
-  // findAll() {
-  //   return this.authService.findAll();
-  // }
+  @Get('google')
+  googleAuth(@Res() res: Response) {
+    const state = randomBytes(16).toString('hex');
+    // CSRF 対策: state を Cookie（またはセッション）に保存
+    res.cookie('oauth_state', state, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 10 * 60 * 1000,
+    });
+    const url = this.authService.createGoogleAuthUrl(state);
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.authService.findOne(+id);
-  // }
+    // TODO: 不要になったら削除
+    console.log('1-url-----------------------', url);
+    return res.redirect(url);
+  }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-  //   return this.authService.update(+id, updateAuthDto);
-  // }
+  @Get('google/callback')
+  async googleCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const savedState = req.cookies?.['oauth_state'];
+    console.log('savedState----------------------', savedState);
+    res.clearCookie('oauth_state');
+    if (!code || !state || !savedState || state !== savedState) {
+      throw new UnauthorizedException('Invalid OAuth state');
+    }
+    const result = await this.authService.signInWithGoogleCode(code);
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.authService.remove(+id);
-  // }
+    // フロントへ自前 JWT を渡す（簡易例）
+    const redirectUrl =
+      `${process.env.FRONTEND_URL}/auth/callback` +
+      `?token=${encodeURIComponent(result.token)}` +
+      `&id=${encodeURIComponent(result.user.id)}` +
+      `&name=${encodeURIComponent(result.user.name)}`;
+
+    return res.redirect(redirectUrl);
+  }
 }
