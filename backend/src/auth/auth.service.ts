@@ -36,7 +36,11 @@ export class AuthService {
       },
     });
 
-    if (user && (await bcrypt.compare(password, user.password))) {
+    if (
+      user &&
+      user.password &&
+      (await bcrypt.compare(password, user.password))
+    ) {
       const payLoad: JwtPayload = {
         sub: user.id,
         username: user.name,
@@ -61,7 +65,7 @@ export class AuthService {
     return client.generateAuthUrl({
       access_type: 'online', // refresh 不要なら online で可
       scope: ['openid', 'email', 'profile'],
-      state,
+      state, // TODO: 理解
       prompt: 'select_account',
       // TODO: nonceの理解
       // OIDC として厳密にするなら nonce も付ける
@@ -73,6 +77,7 @@ export class AuthService {
   async signInWithGoogleCode(code: string) {
     const client = createGoogleOAuthClient();
 
+    //Note: ③IDプロバイダへのアクセストークンリクエスト
     const { tokens } = await client.getToken(code);
     // tokens.id_token / tokens.access_token / tokens.refresh_token?
 
@@ -94,34 +99,33 @@ export class AuthService {
     }
 
     // ※ nonce を付けた場合は payload.nonce も照合する
-
     const googleId = payload.sub;
     const email = payload.email;
     const name = payload.name ?? email;
 
-    // let user = await this.prismaService.user.findFirst({
-    //   where: { OR: [{ googleId }, { email }] },
-    // });
+    let user = await this.prismaService.user.findFirst({
+      where: { OR: [{ googleId }, { email }] },
+    });
 
-    // if (!user) {
-    //   user = await this.prismaService.user.create({
-    //     data: { googleId, email, name },
-    //   });
-    // } else if (!user.googleId) {
-    //   user = await this.prismaService.user.update({
-    //     where: { id: user.id },
-    //     data: { googleId },
-    //   });
-    // }
+    if (!user) {
+      user = await this.prismaService.user.create({
+        data: { googleId, email, name },
+      });
+    } else if (!user.googleId) {
+      user = await this.prismaService.user.update({
+        where: { id: user.id },
+        data: { googleId },
+      });
+    }
 
-    // const token = this.jwtService.sign({
-    //   sub: user.id,
-    //   username: user.name,
-    // });
+    const token = this.jwtService.sign({
+      sub: user.id,
+      username: user.name,
+    });
 
-    // return {
-    //   token,
-    //   user: { id: user.id, name: user.name, email: user.email },
-    // };
+    return {
+      token,
+      user: { id: user.id, name: user.name, email: user.email },
+    };
   }
 }

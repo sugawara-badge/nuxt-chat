@@ -44,29 +44,33 @@ export class AuthController {
       maxAge: 10 * 60 * 1000,
     });
     const url = this.authService.createGoogleAuthUrl(state);
-    console.log('auth-google-url-------------------', url);
-    // return res.redirect(url);
+
+    // TODO: 不要になったら削除
+    console.log('1-url-----------------------', url);
+    return res.redirect(url);
   }
 
-  // @Get('google/callback')
-  // async googleCallback(
-  //   @Query('code') code: string,
-  //   @Query('state') state: string,
-  //   @Req() req: Request,
-  //   @Res() res: Response,
-  // ) {
-  //   const savedState = req.cookies?.['oauth_state'];
-  //   res.clearCookie('oauth_state');
-  //   if (!code || !state || !savedState || state !== savedState) {
-  //     throw new UnauthorizedException('Invalid OAuth state');
-  //   }
-  //   const result = await this.authService.signInWithGoogleCode(code);
-  //   // フロントへ自前 JWT を渡す（簡易例）
-  //   const redirectUrl =
-  //     `${process.env.FRONTEND_URL}/auth/callback` +
-  //     `?token=${encodeURIComponent(result.token)}` +
-  //     `&id=${encodeURIComponent(result.user.id)}` +
-  //     `&name=${encodeURIComponent(result.user.name)}`;
-  //   return res.redirect(redirectUrl);
-  // }
+  @Get('google/callback')
+  async googleCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const savedState = req.cookies?.['oauth_state'];
+    console.log('savedState----------------------', savedState);
+    res.clearCookie('oauth_state');
+    if (!code || !state || !savedState || state !== savedState) {
+      throw new UnauthorizedException('Invalid OAuth state');
+    }
+    const result = await this.authService.signInWithGoogleCode(code);
+    // フロントへ自前 JWT を渡す（簡易例）
+    const redirectUrl =
+      `${process.env.FRONTEND_URL}/auth/callback` +
+      `?token=${encodeURIComponent(result.token)}` +
+      `&id=${encodeURIComponent(result.user.id)}` +
+      `&name=${encodeURIComponent(result.user.name)}`;
+    console.log('redirectUrl---------------', redirectUrl);
+    // return res.redirect(redirectUrl);
+  }
 }
