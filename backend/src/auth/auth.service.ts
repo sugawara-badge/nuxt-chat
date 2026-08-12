@@ -85,6 +85,7 @@ export class AuthService {
       throw new UnauthorizedException('id_token missing');
     }
 
+    // Note: ④ユーザー情報取得(※ /userinfo は呼ばないパターン)
     const ticket = await client.verifyIdToken({
       idToken: tokens.id_token,
       audience: process.env.GOOGLE_CLIENT_ID,
